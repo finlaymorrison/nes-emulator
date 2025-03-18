@@ -1,0 +1,9 @@
+[submodule "external/65x02"]
+	path = external/65x02
+	url = git@github.com:SingleStepTests/65x02.git
+[submodule "external/imgui"]
+	path = external/imgui
+	url = git@github.com:ocornut/imgui.git
+[submodule "external/json"]
+	path = external/json
+	url = git@github.com:nlohmann/json.git

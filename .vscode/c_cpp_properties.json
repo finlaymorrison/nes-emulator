@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",  // Change this name if you're on Windows or macOS.
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",  // Adjust this path to your compiler location.
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
