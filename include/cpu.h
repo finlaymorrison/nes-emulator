@@ -29,9 +29,17 @@ public:
     bool mid_instruction();
 private:
     uint8_t fetch(bool inc);
-    bool OP_NOP_IMP();
-    bool OP_AND_IM();
-    bool OP_AND_ZP();
-    bool OP_AND_ZPX();
-    bool OP_AND_AB();
+    
+    bool MODE_IMP(); // Implied/Accumulator
+    bool MODE_AB(); // Absolute
+    bool MODE_ABX(); // Absolute, X
+    bool MODE_ABY(); // Absolute, Y
+    bool MODE_IM(); // Immediate
+    bool MODE_IN(); // (Indirect)
+    bool MODE_INX(); // (Indirect, X)
+    bool MODE_INY(); // (Indirect), Y
+    bool MODE_ZP(); // Zero Page
+    bool MODE_ZPX(); // Zero Page, X
+    bool MODE_ZPY(); // Zero Page, Y
+    bool MODE_REL(); // Relative
 };
