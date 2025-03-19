@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = --std=c++17 -Iinclude -Iexternal/imgui -Iexternal/imgui/backends -Iexternal/json/include -I/usr/include/SDL2
+CXXFLAGS = --std=c++17 -O3 -Iinclude -Iexternal/imgui -Iexternal/imgui/backends -Iexternal/json/include -I/usr/include/SDL2
 LDFLAGS = -lSDL2 -lSDL2main
 
 EXEC = nes

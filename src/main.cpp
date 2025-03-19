@@ -48,11 +48,17 @@ int main(int argc, char** argv)
 {
     const std::string single_step_dir = "external/65x02/nes6502/v1";
     const std::set<std::string> tests_to_run = {
-        "ea.json",
-        "29.json",
+        "05.json",
+        "09.json",
+        "0d.json",
+        "21.json",
         "25.json",
+        "29.json",
+        "2d.json",
+        "31.json",
         "35.json",
-        "2d.json"
+        "39.json",
+        "3d.json"
     };
 
 
@@ -70,7 +76,8 @@ int main(int argc, char** argv)
 
         std::string opcode_str = fs::path(json_file).stem().string();
         int opcode = std::stoi(opcode_str, nullptr, 16);
-        std::cout << "0x" << std::uppercase << std::hex << opcode
+        std::cout << "0x" << std::uppercase << std::hex
+            << std::setfill('0') << std::setw(2) << opcode
             << " : " << (passed ? "PASS" : "FAIL") << std::endl;
     }
 }

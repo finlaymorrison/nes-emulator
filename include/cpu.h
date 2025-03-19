@@ -30,16 +30,15 @@ public:
 private:
     uint8_t fetch(bool inc);
     
-    bool MODE_IMP(); // Implied/Accumulator
-    bool MODE_AB(); // Absolute
-    bool MODE_ABX(); // Absolute, X
-    bool MODE_ABY(); // Absolute, Y
-    bool MODE_IM(); // Immediate
-    bool MODE_IN(); // (Indirect)
-    bool MODE_INX(); // (Indirect, X)
-    bool MODE_INY(); // (Indirect), Y
-    bool MODE_ZP(); // Zero Page
-    bool MODE_ZPX(); // Zero Page, X
-    bool MODE_ZPY(); // Zero Page, Y
-    bool MODE_REL(); // Relative
+    bool ADDR_IM(); // Immediate
+    bool ADDR_ZP(); // Zero-Page
+    bool ADDR_ZPX(); // Zero-Page X
+    bool ADDR_AB(); // Absolute
+    bool ADDR_ABX(); // Absolute X
+    bool ADDR_ABY(); // Absolute Y
+    bool ADDR_INX(); // Index X
+    bool ADDR_INY(); // Index Y
+
+    bool OP_OR();
+    bool OP_AND();
 };
