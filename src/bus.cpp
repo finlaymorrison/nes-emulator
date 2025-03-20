@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 Bus::Bus(RAM *ram) :
     ram{ram}, operations{}
@@ -45,4 +46,28 @@ bool Bus::verify_operations(nlohmann::json json)
         }
     }
     return true;
+}
+
+void Bus::analyse_operations(nlohmann::json json)
+{
+    if (verify_operations(json)) return;
+
+    std::cerr << std::dec;
+    if (operations.size() != json.size())
+    {
+        std::cerr << "Bus operation count mismatch: Expected "
+            << json.size() << ", got " << operations.size() << std::endl;
+        return;
+    }
+
+    for (size_t i = 0; i < operations.size(); ++i)
+    {
+        BusOperationType type = (json[i][2].get<std::string>() == "read")
+            ? BusOperationType::READ : BusOperationType::WRITE;
+        
+        std::cerr << "Expected: " << "[" << ((type == BusOperationType::READ) ? "read" : "write")
+            << "] A=" << json[i][0] << " V=" << json[i][1] << "  ";
+        std::cerr << "Observed: " << "[" << ((operations[i].type == BusOperationType::READ) ? "read" : "write")
+            << "] A=" << operations[i].addr << " V=" << operations[i].val << std::endl;
+    }
 }

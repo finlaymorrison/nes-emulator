@@ -1,6 +1,7 @@
 #include "ram.h"
 
 #include <iostream>
+#include <iomanip>
 
 RAM::RAM() :
     memory{}
@@ -36,4 +37,17 @@ bool RAM::verify_state(nlohmann::json json)
         }
     }
     return true;
+}
+
+void RAM::analyse_state(nlohmann::json json)
+{
+    std::cerr << std::dec;
+    for (auto &pair : json["ram"])
+    {
+        if (memory[pair[0]] != pair[1])
+        {
+            std::cerr << "State mismatch at " << pair[0] << ": Expected "
+                << pair[1] << ", got " << memory[pair[0]] << std::endl;
+        }
+    }
 }

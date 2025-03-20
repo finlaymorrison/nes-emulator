@@ -32,4 +32,5 @@ public:
     uint8_t get(uint16_t addr);
     void set(uint16_t addr, uint8_t val);
     bool verify_operations(nlohmann::json json);
+    void analyse_operations(nlohmann::json json);
 };

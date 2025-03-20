@@ -24,21 +24,26 @@ public:
     CPU();
     void load_json(nlohmann::json json);
     bool verify_state(nlohmann::json json);
+    void analyse_state(nlohmann::json json);
     void clock_cycle();
     void attach_bus(Bus *new_bus);
     bool mid_instruction();
 private:
     uint8_t fetch(bool inc);
+    bool writeback(int value_idx, uint8_t val);
     
-    bool ADDR_IM(); // Immediate
-    bool ADDR_ZP(); // Zero-Page
-    bool ADDR_ZPX(); // Zero-Page X
-    bool ADDR_AB(); // Absolute
-    bool ADDR_ABX(); // Absolute X
-    bool ADDR_ABY(); // Absolute Y
-    bool ADDR_INX(); // Index X
-    bool ADDR_INY(); // Index Y
+    int ADDR_IMP(); // Implied
+    int ADDR_IM(); // Immediate
+    int ADDR_ZP(); // Zero-Page
+    int ADDR_ZPX(); // Zero-Page X
+    int ADDR_AB(); // Absolute
+    int ADDR_ABX(); // Absolute X
+    int ADDR_ABY(); // Absolute Y
+    int ADDR_INX(); // Index X
+    int ADDR_INY(); // Index Y
 
-    bool OP_OR();
-    bool OP_AND();
+    uint8_t OP_ORA(int value_idx);
+    uint8_t OP_AND(int value_idx);
+    uint8_t OP_BRK(int value_idx);
+    uint8_t OP_ASL(int value_idx);
 };
