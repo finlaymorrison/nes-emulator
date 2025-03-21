@@ -30,36 +30,36 @@ public:
     bool mid_instruction();
 private:
     uint8_t last_p; // I hate this
+    uint16_t addr; // Effective address
+    uint8_t val; // Address value
 
     uint8_t fetch(bool inc);
     
-    int ADDR_IMP(); // Implied
-    int ADDR_IM(); // Immediate
-    int ADDR_ZP(); // Zero-Page
-    int ADDR_ZPX(); // Zero-Page X
-    int ADDR_AB(); // Absolute
-    int ADDR_ABX(bool optimise=true); // Absolute X
-    int ADDR_ABY(); // Absolute Y
-    int ADDR_INX(); // Index X
-    int ADDR_INY(); // Index Y
+    bool ADDR_IMP(); // Implied
+    bool ADDR_IM(); // Immediate
+    bool ADDR_ZP(); // Zero-Page
+    bool ADDR_ZPX(); // Zero-Page X
+    bool ADDR_AB(); // Absolute
+    bool ADDR_ABX(bool optimise=true); // Absolute X
+    bool ADDR_ABY(); // Absolute Y
+    bool ADDR_INX(); // Index X
+    bool ADDR_INY(); // Index Y
 
-    uint8_t OP_ORA(int value_idx);
-    uint8_t OP_AND(int value_idx);
-    uint8_t OP_ASL(int value_idx);
-    uint8_t OP_EOR(int value_idx);
-    uint8_t OP_ROL(int value_idx);
-    uint8_t OP_ROR(int value_idx);
-    uint8_t OP_DEC(int value_idx);
-    uint8_t OP_INC(int value_idx);
-    uint8_t OP_NOP(int value_idx, bool flag=false);
+    uint8_t OP_ORA();
+    uint8_t OP_AND();
+    uint8_t OP_ASL();
+    uint8_t OP_EOR();
+    uint8_t OP_ROL();
+    uint8_t OP_ROR();
+    uint8_t OP_DEC();
+    uint8_t OP_INC();
+    uint8_t OP_NOP(bool flag=false);
 
     bool WB_ACC(uint8_t val);
     bool WB_X(uint8_t val);
     bool WB_Y(uint8_t val);
-    bool WB_ZP(int value_idx, uint8_t val);
-    bool WB_NC(int value_idx, uint8_t val, uint8_t inc=0);
-    bool WB_CR(int value_idx, uint8_t val, uint8_t inc=0);
-
+    bool WB_MEM(uint8_t comp_val);
+    
     bool WB_BRK();
     bool WB_PHP();
     bool WB_PHA();
