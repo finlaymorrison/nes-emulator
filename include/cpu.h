@@ -32,7 +32,6 @@ private:
     uint8_t last_p; // I hate this
 
     uint8_t fetch(bool inc);
-    bool writeback(uint16_t addr, uint8_t pre_val, uint8_t val);
     
     int ADDR_IMP(); // Implied
     int ADDR_IM(); // Immediate
@@ -50,4 +49,12 @@ private:
     uint8_t OP_ASL(int value_idx);
     uint8_t OP_EOR(int value_idx);
     uint8_t OP_ROL(int value_idx);
+    uint8_t OP_ROR(int value_idx);
+    uint8_t OP_DEC(int value_idx);
+    uint8_t OP_INC(int value_idx);
+
+    bool WB_ACC(uint8_t val);
+    bool WB_ZP(int value_idx, uint8_t val);
+    bool WB_NC(int value_idx, uint8_t val, uint8_t inc=0);
+    bool WB_CR(int value_idx, uint8_t val, uint8_t inc=0);
 };
