@@ -88,6 +88,18 @@ bool CPU::WB_ACC(uint8_t val)
     return true;
 }
 
+bool CPU::WB_X(uint8_t val)
+{
+    x = val;
+    return true;
+}
+
+bool CPU::WB_Y(uint8_t val)
+{
+    y = val;
+    return true;
+}
+
 bool CPU::WB_ZP(int value_idx, uint8_t val)
 {
     if (ins_step < ins_stack.size())
@@ -144,8 +156,8 @@ void CPU::clock_cycle()
         // BRK impl
         init_val = ADDR_IMP();
         if (!init_val) break;
-        comp_val = OP_BRK(init_val);
-        complete = comp_val;
+        comp_val = OP_NOP(init_val);
+        complete = WB_BRK();
         break;
     case 0x01:
         // ORA X,ind
@@ -170,6 +182,10 @@ void CPU::clock_cycle()
         break;
     case 0x08:
         // PHP impl
+        init_val = ADDR_IMP();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val);
+        complete = WB_PHP();
         break;
     case 0x09:
         // ORA #
@@ -275,7 +291,7 @@ void CPU::clock_cycle()
         complete = WB_ZP(init_val, comp_val);
         break;
     case 0x28:
-        // PHP impl
+        // PLP impl
         break;
     case 0x29:
         // AND #
@@ -378,6 +394,10 @@ void CPU::clock_cycle()
         break;
     case 0x48:
         // PHA impl
+        init_val = ADDR_IMP();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val);
+        complete = WB_PHA();
         break;
     case 0x49:
         // EOR #
@@ -572,51 +592,103 @@ void CPU::clock_cycle()
         break;
     case 0xA0:
         // LDY #
+        init_val = ADDR_IM();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_Y(comp_val);
         break;
     case 0xA1:
         // LDA X,ind
+        init_val = ADDR_INX();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_ACC(comp_val);
         break;
     case 0xA2:
         // LDX #
+        init_val = ADDR_IM();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_X(comp_val);
         break;
     case 0xA4:
         // LDY zpg
+        init_val = ADDR_ZP();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_Y(comp_val);
         break;
     case 0xA5:
         // LDA zpg
+        init_val = ADDR_ZP();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_ACC(comp_val);
         break;
     case 0xA6:
         // LDX zpg
+        init_val = ADDR_ZP();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_X(comp_val);
         break;
     case 0xA8:
         // TAY impl
         break;
     case 0xA9:
         // LDA #
+        init_val = ADDR_IM();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_ACC(comp_val);
         break;
     case 0xAA:
         // TAX impl
         break;
     case 0xAC:
         // LDY abs
+        init_val = ADDR_AB();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_Y(comp_val);
         break;
     case 0xAD:
         // LDA abs
+        init_val = ADDR_AB();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_ACC(comp_val);
         break;
     case 0xAE:
         // LDX abs
+        init_val = ADDR_AB();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_X(comp_val);
         break;
     case 0xB0:
         // BCS rel
         break;
     case 0xB1:
         // LDA ind,Y
+        init_val = ADDR_INY();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_ACC(comp_val);
         break;
     case 0xB4:
         // LDY zpg,X
+        init_val = ADDR_ZPX();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_Y(comp_val);
         break;
     case 0xB5:
         // LDA zpg,X
+        init_val = ADDR_ZPX();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_ACC(comp_val);
         break;
     case 0xB6:
         // LDX zpg,Y
@@ -626,18 +698,34 @@ void CPU::clock_cycle()
         break;
     case 0xB9:
         // LDA abs,Y
+        init_val = ADDR_ABY();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_ACC(comp_val);
         break;
     case 0xBA:
         // TSX impl
         break;
     case 0xBC:
         // LDY abs,X
+        init_val = ADDR_ABX();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_Y(comp_val);
         break;
     case 0xBD:
         // LDA abs,X
+        init_val = ADDR_ABX();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_ACC(comp_val);
         break;
     case 0xBE:
         // LDX abs,Y
+        init_val = ADDR_ABY();
+        if (!init_val) break;
+        comp_val = OP_NOP(init_val, true);
+        complete = WB_X(comp_val);
         break;
     case 0xC0:
         // CPY #
@@ -1073,7 +1161,18 @@ uint8_t CPU::OP_INC(int value_idx)
     return result;
 }
 
-uint8_t CPU::OP_BRK(int value_idx)
+uint8_t CPU::OP_NOP(int value_idx, bool flag)
+{
+    if (flag)
+    {
+        p = p & ~(FLG_ZRO | FLG_NEG);
+        p |= (ins_stack[value_idx] == 0) ? FLG_ZRO : 0;
+        p |= (ins_stack[value_idx] & (1 << 7)) ? FLG_NEG : 0;
+    }
+    return ins_stack[value_idx];
+}
+
+bool CPU::WB_BRK()
 {
     switch(ins_step)
     {
@@ -1096,7 +1195,35 @@ uint8_t CPU::OP_BRK(int value_idx)
     case 6:
         pc |= bus->get(0xFFFF)<<8;
     default:
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
+}
+
+bool CPU::WB_PHP()
+{
+    switch(ins_step)
+    {
+    case 1:
+        break;
+    case 2:
+        bus->set(0x0100+s--, p|FLG_BRK);
+    default:
+        return true;
+    }
+    return false;
+}
+
+bool CPU::WB_PHA()
+{
+    switch(ins_step)
+    {
+    case 1:
+        break;
+    case 2:
+        bus->set(0x0100+s--, a);
+    default:
+        return true;
+    }
+    return false;
 }

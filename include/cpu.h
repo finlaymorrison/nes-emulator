@@ -45,16 +45,22 @@ private:
 
     uint8_t OP_ORA(int value_idx);
     uint8_t OP_AND(int value_idx);
-    uint8_t OP_BRK(int value_idx);
     uint8_t OP_ASL(int value_idx);
     uint8_t OP_EOR(int value_idx);
     uint8_t OP_ROL(int value_idx);
     uint8_t OP_ROR(int value_idx);
     uint8_t OP_DEC(int value_idx);
     uint8_t OP_INC(int value_idx);
+    uint8_t OP_NOP(int value_idx, bool flag=false);
 
     bool WB_ACC(uint8_t val);
+    bool WB_X(uint8_t val);
+    bool WB_Y(uint8_t val);
     bool WB_ZP(int value_idx, uint8_t val);
     bool WB_NC(int value_idx, uint8_t val, uint8_t inc=0);
     bool WB_CR(int value_idx, uint8_t val, uint8_t inc=0);
+
+    bool WB_BRK();
+    bool WB_PHP();
+    bool WB_PHA();
 };
