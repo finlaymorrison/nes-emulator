@@ -46,8 +46,8 @@ void RAM::analyse_state(nlohmann::json json)
     {
         if (memory[pair[0]] != pair[1])
         {
-            std::cerr << "State mismatch at " << pair[0] << ": Expected "
-                << pair[1] << ", got " << memory[pair[0]] << std::endl;
+            std::cerr << "Data mismatch at " << pair[0] << ": Expected "
+                << pair[1] << ", got " << (int)memory[pair[0]] << std::endl;
         }
     }
 }

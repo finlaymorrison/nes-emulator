@@ -12,7 +12,7 @@
 #define FLG_CRY 0b00000001
 
 CPU::CPU() :
-    pc{}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_stack{}, ins_step{0}
+    pc{}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_stack{}, ins_step{0}, last_p{}
 {
     ins_stack.reserve(10);
 }
@@ -82,10 +82,14 @@ uint8_t CPU::fetch(bool inc)
     return byte;
 }
 
-bool CPU::writeback(int value_idx, uint8_t val)
+bool CPU::writeback(uint16_t addr, uint8_t pre_val, uint8_t val)
 {
-    if (ins_step < ins_stack.size()) return false;
-    bus->set(ins_stack[value_idx-1], val);
+    if (ins_step < ins_stack.size())
+    {
+        bus->set(addr, pre_val);
+        return false;
+    }
+    bus->set(addr, val);
     return true;
 }
 
@@ -95,12 +99,13 @@ void CPU::clock_cycle()
     {
         ins_stack.push_back(fetch(true));
         ++ins_step;
+        last_p = p;
         return;
     }
 
     int init_val = 0;
     int comp_val = 0;
-    bool complete;
+    bool complete = false;
     switch ((ins_stack[0]))
     {
     case 0x00:
@@ -130,8 +135,8 @@ void CPU::clock_cycle()
         // ASL zpg
         init_val = ADDR_ZP();
         if (!init_val) break;
-        comp_val = OP_ORA(init_val);
-        complete = writeback(init_val, comp_val);
+        comp_val = OP_ASL(init_val);
+        complete = writeback(ins_stack[init_val-1], ins_stack[init_val], comp_val);
         break;
     case 0x08:
         // PHP impl
@@ -160,9 +165,14 @@ void CPU::clock_cycle()
         a = comp_val;
         complete = true;
         break;
-    case 0x0E:
+    case 0x0E:{
         // ASL abs
-        break;
+        init_val = ADDR_AB();
+        if (!init_val) break;
+        comp_val = OP_ASL(init_val);
+        uint16_t addr = (uint16_t)ins_stack[2]<<8 | ins_stack[1];
+        complete = writeback(addr, ins_stack[init_val], comp_val);
+        }break;
     case 0x10:
         // BPL rel
         break;
@@ -184,19 +194,38 @@ void CPU::clock_cycle()
         break;
     case 0x16:
         // ASL zpg,x
+        init_val = ADDR_ZPX();
+        if (!init_val) break;
+        comp_val = OP_ASL(init_val);
+        complete = writeback(ins_stack[init_val-1], ins_stack[init_val], comp_val);
         break;
     case 0x18:
         // CLC impl
         break;
     case 0x19:
         // ORA abs,Y
+        init_val = ADDR_ABY();
+        if (!init_val) break;
+        comp_val = OP_ORA(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x1D:
         // ORA abs,X
+        init_val = ADDR_ABX();
+        if (!init_val) break;
+        comp_val = OP_ORA(init_val);
+        a = comp_val;
+        complete = true;
         break;
-    case 0x1E:
+    case 0x1E:{
         // ASL abs,X
-        break;
+        init_val = ADDR_ABX(false);
+        if (!init_val) break;
+        comp_val = OP_ASL(init_val);
+        uint16_t addr = (static_cast<uint16_t>(ins_stack[2])<<8) + ins_stack[1] + x;
+        complete = writeback(addr, ins_stack[init_val], comp_val);
+        }break;
     case 0x20:
         // JSR abs
         break;
@@ -221,6 +250,10 @@ void CPU::clock_cycle()
         break;
     case 0x26:
         // ROL zpg
+        init_val = ADDR_ZP();
+        if (!init_val) break;
+        comp_val = OP_ROL(init_val);
+        complete = writeback(ins_stack[init_val-1], ins_stack[init_val], comp_val);
         break;
     case 0x28:
         // PHP impl
@@ -235,6 +268,11 @@ void CPU::clock_cycle()
         break;
     case 0x2A:
         // ROL A
+        init_val = ADDR_IMP();
+        if (!init_val) break;
+        comp_val = OP_ROL(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x2C:
         // BIT abs
@@ -247,9 +285,14 @@ void CPU::clock_cycle()
         a = comp_val;
         complete = true;
         break;
-    case 0x2E:
+    case 0x2E:{
         // ROL abs
-        break;
+        init_val = ADDR_AB();
+        if (!init_val) break;
+        comp_val = OP_ROL(init_val);
+        uint16_t addr = (static_cast<uint16_t>(ins_stack[2])<<8) + ins_stack[1];
+        complete = writeback(addr, ins_stack[init_val], comp_val);
+        }break;
     case 0x30:
         // BMI rel
         break;
@@ -271,6 +314,10 @@ void CPU::clock_cycle()
         break;
     case 0x36:
         // ROL zpg,X
+        init_val = ADDR_ZPX();
+        if (!init_val) break;
+        comp_val = OP_ROL(init_val);
+        complete = writeback(ins_stack[init_val-1], ins_stack[init_val], comp_val);
         break;
     case 0x38:
         // SEC impl
@@ -291,17 +338,32 @@ void CPU::clock_cycle()
         a = comp_val;
         complete = true;
         break;
-    case 0x3E:
+    case 0x3E:{
         // ROL abs,X
-        break;
+        init_val = ADDR_ABX(false);
+        if (!init_val) break;
+        comp_val = OP_ROL(init_val);
+        uint16_t addr = (static_cast<uint16_t>(ins_stack[2])<<8) + ins_stack[1] + x;
+        complete = writeback(addr, ins_stack[init_val], comp_val);
+        }break;
     case 0x40:
         // RTI impl
         break;
     case 0x41:
         // EOR X,ind
+        init_val = ADDR_INX();
+        if (!init_val) break;
+        comp_val = OP_EOR(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x45:
         // EOR zpg
+        init_val = ADDR_ZP();
+        if (!init_val) break;
+        comp_val = OP_EOR(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x46:
         // LSR zpg
@@ -311,6 +373,11 @@ void CPU::clock_cycle()
         break;
     case 0x49:
         // EOR #
+        init_val = ADDR_IM();
+        if (!init_val) break;
+        comp_val = OP_EOR(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x4A:
         // LSR A
@@ -320,6 +387,11 @@ void CPU::clock_cycle()
         break;
     case 0x4D:
         // EOR abs
+        init_val = ADDR_AB();
+        if (!init_val) break;
+        comp_val = OP_EOR(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x4E:
         // LSR abs
@@ -329,9 +401,19 @@ void CPU::clock_cycle()
         break;
     case 0x51:
         // EOR ind,Y
+        init_val = ADDR_INY();
+        if (!init_val) break;
+        comp_val = OP_EOR(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x55:
         // EOR zpg,X
+        init_val = ADDR_ZPX();
+        if (!init_val) break;
+        comp_val = OP_EOR(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x56:
         // LSR zpg,X
@@ -341,9 +423,19 @@ void CPU::clock_cycle()
         break;
     case 0x59:
         // EOR abs,Y
+        init_val = ADDR_ABY();
+        if (!init_val) break;
+        comp_val = OP_EOR(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x5D:
         // EOR abs,X
+        init_val = ADDR_ABX();
+        if (!init_val) break;
+        comp_val = OP_EOR(init_val);
+        a = comp_val;
+        complete = true;
         break;
     case 0x5E:
         // LSR abs,X
@@ -728,7 +820,7 @@ int CPU::ADDR_AB()
     return 0;
 }
 
-int CPU::ADDR_ABX()
+int CPU::ADDR_ABX(bool optimise)
 {
     switch (ins_step)
     {
@@ -739,16 +831,16 @@ int CPU::ADDR_ABX()
     case 3:{
         uint16_t addr = (static_cast<uint16_t>(ins_stack[2])<<8) | (uint8_t)(ins_stack[1]+x);
         ins_stack.push_back(bus->get(addr));
-        if ((uint8_t)(ins_stack[1]+x) >= x) return 3;
+        if ((uint8_t)(ins_stack[1]+x) >= x && optimise) return 3;
         }break;
     case 4:
-        if ((uint8_t)(ins_stack[1]+x) < x)
+        if ((uint8_t)(ins_stack[1]+x) < x || !optimise)
         {
             uint16_t true_addr = (static_cast<uint16_t>(ins_stack[2])<<8) + ins_stack[1] + x;
             ins_stack.push_back(bus->get(true_addr));
         }
     default:
-        return 3 + ((uint8_t)(ins_stack[1]+x) < x ? 1 : 0);
+        return 3 + ((uint8_t)(ins_stack[1]+x) < x || optimise ? 1 : 0);
     }
     return 0;
 }
@@ -853,17 +945,42 @@ uint8_t CPU::OP_AND(int value_idx)
     return result;
 }
 
+uint8_t CPU::OP_EOR(int value_idx)
+{
+    uint8_t result = a ^ ins_stack[value_idx];
+
+    p = p & ~(FLG_ZRO | FLG_NEG);
+    p |= (result == 0) ? FLG_ZRO : 0;
+    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+
+    return result;
+}
+
 uint8_t CPU::OP_ASL(int value_idx)
 {
     p = p & ~(FLG_ZRO | FLG_NEG | FLG_CRY);
     p |= (ins_stack[value_idx] & 0x80) ? FLG_CRY : 0;
 
-    ins_stack[value_idx] <<= 1;
+    uint8_t result = ins_stack[value_idx] << 1;
 
-    p |= (ins_stack[value_idx] == 0) ? FLG_ZRO : 0;
-    p |= (ins_stack[value_idx] & (1 << 7)) ? FLG_NEG : 0;
+    p |= (result == 0) ? FLG_ZRO : 0;
+    p |= (result & (1 << 7)) ? FLG_NEG : 0;
 
-    return ins_stack[value_idx];
+    return result;
+}
+
+uint8_t CPU::OP_ROL(int value_idx)
+{
+
+    uint8_t result = ins_stack[value_idx] << 1;
+    result |= (last_p & FLG_CRY) ? 1 : 0;
+
+    p = p & ~(FLG_ZRO | FLG_NEG | FLG_CRY);
+    p |= (ins_stack[value_idx] & 0x80) ? FLG_CRY : 0;
+    p |= (result == 0) ? FLG_ZRO : 0;
+    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+
+    return result;
 }
 
 uint8_t CPU::OP_BRK(int value_idx)

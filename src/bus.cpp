@@ -57,7 +57,6 @@ void Bus::analyse_operations(nlohmann::json json)
     {
         std::cerr << "Bus operation count mismatch: Expected "
             << json.size() << ", got " << operations.size() << std::endl;
-        return;
     }
 
     for (size_t i = 0; i < operations.size(); ++i)
@@ -68,6 +67,6 @@ void Bus::analyse_operations(nlohmann::json json)
         std::cerr << "Expected: " << "[" << ((type == BusOperationType::READ) ? "read" : "write")
             << "] A=" << json[i][0] << " V=" << json[i][1] << "  ";
         std::cerr << "Observed: " << "[" << ((operations[i].type == BusOperationType::READ) ? "read" : "write")
-            << "] A=" << operations[i].addr << " V=" << operations[i].val << std::endl;
+            << "] A=" << operations[i].addr << " V=" << (int)operations[i].val << std::endl;
     }
 }

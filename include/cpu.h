@@ -29,15 +29,17 @@ public:
     void attach_bus(Bus *new_bus);
     bool mid_instruction();
 private:
+    uint8_t last_p; // I hate this
+
     uint8_t fetch(bool inc);
-    bool writeback(int value_idx, uint8_t val);
+    bool writeback(uint16_t addr, uint8_t pre_val, uint8_t val);
     
     int ADDR_IMP(); // Implied
     int ADDR_IM(); // Immediate
     int ADDR_ZP(); // Zero-Page
     int ADDR_ZPX(); // Zero-Page X
     int ADDR_AB(); // Absolute
-    int ADDR_ABX(); // Absolute X
+    int ADDR_ABX(bool optimise=true); // Absolute X
     int ADDR_ABY(); // Absolute Y
     int ADDR_INX(); // Index X
     int ADDR_INY(); // Index Y
@@ -46,4 +48,6 @@ private:
     uint8_t OP_AND(int value_idx);
     uint8_t OP_BRK(int value_idx);
     uint8_t OP_ASL(int value_idx);
+    uint8_t OP_EOR(int value_idx);
+    uint8_t OP_ROL(int value_idx);
 };
