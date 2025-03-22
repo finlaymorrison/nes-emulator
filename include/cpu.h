@@ -44,6 +44,15 @@ private:
     bool ADDR_ABY(); // Absolute Y
     bool ADDR_INX(); // Index X
     bool ADDR_INY(); // Index Y
+    bool ADDR_REL(); // PC Relative
+
+    bool ADDR_ZP_R();
+    bool ADDR_ZPX_R();
+    bool ADDR_AB_R();
+    bool ADDR_ABX_R(bool optimise=true);
+    bool ADDR_ABY_R(bool optimise=true);
+    bool ADDR_INX_R();
+    bool ADDR_INY_R(bool optimise=true);
 
     uint8_t OP_ORA();
     uint8_t OP_AND();
@@ -58,7 +67,7 @@ private:
     bool WB_ACC(uint8_t val);
     bool WB_X(uint8_t val);
     bool WB_Y(uint8_t val);
-    bool WB_MEM(uint8_t comp_val);
+    bool WB_MEM(uint8_t comp_val, bool delay=true);
     
     bool WB_BRK();
     bool WB_PHP();
