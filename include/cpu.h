@@ -35,6 +35,9 @@ private:
 
     uint8_t fetch(bool inc);
     
+    bool set_flag(uint8_t flag);
+    bool clear_flag(uint8_t flag);
+
     bool ADDR_IMP(); // Implied
     bool ADDR_IM(); // Immediate
     bool ADDR_ZP(); // Zero-Page
@@ -70,22 +73,10 @@ private:
     uint8_t OP_DEC();
     uint8_t OP_INC();
     uint8_t OP_TST();
-    uint8_t OP_FLG(uint8_t flgval);
+    void OP_FLG(uint8_t flgval);
     uint8_t OP_CMP(uint8_t cmpval);
-    uint8_t OP_NOP(bool flag=false);
 
-    bool WB_ACC(uint8_t val);
-    bool WB_X(uint8_t val);
-    bool WB_Y(uint8_t val);
-    bool WB_PC();
-    bool WB_S(uint8_t val);
     bool WB_MEM(uint8_t comp_val, bool delay=true);
-    bool WB_CLC();
-    bool WB_SEC();
-    bool WB_CLI();
-    bool WB_SEI();
-    bool WB_NOP();
-    bool WB_CLV();
     
     bool WB_BRK();
     bool WB_PHP();
