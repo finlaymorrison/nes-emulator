@@ -6,18 +6,25 @@
 #include <iomanip>
 
 Bus::Bus(RAM *ram) :
-    ram{ram}, operations{}
+    ram{ram}, operations{}, conflict_log{}
 {}
 
 uint8_t Bus::get(uint16_t addr)
 {
+    conflict_log.back()++;
     uint8_t val = ram->get(addr);
     operations.emplace_back(BusOperation{addr, val, BusOperationType::READ});
     return val;
 }
 
+void Bus::start_cycle()
+{
+    conflict_log.push_back(0);
+}
+
 void Bus::set(uint16_t addr, uint8_t val)
 {
+    conflict_log.back()++;
     ram->set(addr, val);
     operations.emplace_back(BusOperation{addr, val, BusOperationType::WRITE});
 }
@@ -45,6 +52,15 @@ bool Bus::verify_operations(nlohmann::json json)
             return false;
         }
     }
+
+    for (int accesses : conflict_log)
+    {
+        if (accesses != 1)
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -76,5 +92,13 @@ void Bus::analyse_operations(nlohmann::json json)
         
         std::cerr << "Observed: " << "[" << ((operations[i].type == BusOperationType::READ) ? "read" : "write")
             << "] A=" << operations[i].addr << " V=" << (int)operations[i].val << std::endl;
+    }
+
+    for (int i = 0; i < conflict_log.size(); ++i)
+    {
+        if (conflict_log[i] != 1)
+        {
+            std::cerr << "Bus Conflict on Cycle " << i << " with " << conflict_log[i] << " Operations" << std::endl;
+        }
     }
 }

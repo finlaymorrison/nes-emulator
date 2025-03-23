@@ -39,6 +39,7 @@ private:
     bool ADDR_IM(); // Immediate
     bool ADDR_ZP(); // Zero-Page
     bool ADDR_ZPX(); // Zero-Page X
+    bool ADDR_ZPY(); // Zero-Page Y
     bool ADDR_AB(); // Absolute
     bool ADDR_ABX(bool optimise=true); // Absolute X
     bool ADDR_ABY(); // Absolute Y
@@ -48,10 +49,12 @@ private:
 
     bool ADDR_ZP_R();
     bool ADDR_ZPX_R();
+    bool ADDR_ZPY_R();
     bool ADDR_AB_R();
     bool ADDR_ABP_R();
     bool ADDR_ABX_R(bool optimise=true);
     bool ADDR_ABY_R(bool optimise=true);
+    bool ADDR_IN_R();
     bool ADDR_INX_R();
     bool ADDR_INY_R(bool optimise=true);
 
@@ -67,20 +70,31 @@ private:
     uint8_t OP_DEC();
     uint8_t OP_INC();
     uint8_t OP_TST();
+    uint8_t OP_FLG(uint8_t flgval);
     uint8_t OP_CMP(uint8_t cmpval);
     uint8_t OP_NOP(bool flag=false);
 
     bool WB_ACC(uint8_t val);
     bool WB_X(uint8_t val);
     bool WB_Y(uint8_t val);
+    bool WB_PC();
+    bool WB_S(uint8_t val);
     bool WB_MEM(uint8_t comp_val, bool delay=true);
     bool WB_CLC();
+    bool WB_SEC();
+    bool WB_CLI();
+    bool WB_SEI();
     bool WB_NOP();
+    bool WB_CLV();
     
     bool WB_BRK();
     bool WB_PHP();
     bool WB_PHA();
+    bool WB_PLA();
+    bool WB_PLP();
     bool WB_JSR();
+    bool WB_RTI();
+    bool WB_RTS();
 
     bool BRANCH();
 };
