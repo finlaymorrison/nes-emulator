@@ -242,6 +242,9 @@ void CPU::clock_cycle()
         break;
     case 0x24:
         // BIT zpg
+        if (!ADDR_ZP()) break;
+        comp_val - OP_TST();
+        complete = WB_NOP();
         break;
     case 0x25:
         // AND zpg
@@ -272,6 +275,9 @@ void CPU::clock_cycle()
         break;
     case 0x2C:
         // BIT abs
+        if (!ADDR_AB()) break;
+        comp_val - OP_TST();
+        complete = WB_NOP();
         break;
     case 0x2D:
         // AND abs
@@ -1374,6 +1380,16 @@ uint8_t CPU::OP_NOP(bool flag)
     return val;
 }
 
+uint8_t CPU::OP_TST()
+{
+    p &= ~(FLG_NEG|FLG_OVR|FLG_ZRO);
+    p |= (val&0x80) ? FLG_NEG : 0;
+    p |= (val&0x40) ? FLG_OVR : 0;
+    p |= ((a&val) == 0) ? FLG_ZRO : 0;
+
+    return 0;
+}
+
 bool CPU::WB_BRK()
 {
     switch(ins_step)
@@ -1454,5 +1470,10 @@ bool CPU::BRANCH()
 bool CPU::WB_CLC()
 {
     p &= ~FLG_CRY;
+    return true;
+}
+
+bool CPU::WB_NOP()
+{
     return true;
 }

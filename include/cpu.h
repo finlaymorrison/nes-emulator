@@ -63,6 +63,7 @@ private:
     uint8_t OP_ROR();
     uint8_t OP_DEC();
     uint8_t OP_INC();
+    uint8_t OP_TST();
     uint8_t OP_NOP(bool flag=false);
 
     bool WB_ACC(uint8_t val);
@@ -70,6 +71,7 @@ private:
     bool WB_Y(uint8_t val);
     bool WB_MEM(uint8_t comp_val, bool delay=true);
     bool WB_CLC();
+    bool WB_NOP();
     
     bool WB_BRK();
     bool WB_PHP();
