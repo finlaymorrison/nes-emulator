@@ -148,7 +148,7 @@ void CPU::clock_cycle()
         // ASL zpg
         if (!ADDR_ZP()) break;
         comp_val = OP_ASL();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x08:
         // PHP impl
@@ -178,7 +178,7 @@ void CPU::clock_cycle()
         // ASL abs
         if (!ADDR_AB()) break;
         comp_val = OP_ASL();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x10:
         // BPL rel
@@ -205,7 +205,7 @@ void CPU::clock_cycle()
         // ASL zpg,x
         if (!ADDR_ZPX()) break;
         comp_val = OP_ASL();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x18:
         // CLC impl
@@ -229,10 +229,13 @@ void CPU::clock_cycle()
         // ASL abs,X
         if (!ADDR_ABX(false)) break;
         comp_val = OP_ASL();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x20:
         // JSR abs
+        if (!ADDR_ABP_R()) break;
+        comp_val = OP_NOP();
+        complete = WB_JSR();
         break;
     case 0x21:
         // AND X,ind
@@ -256,7 +259,7 @@ void CPU::clock_cycle()
         // ROL zpg
         if (!ADDR_ZP()) break;
         comp_val = OP_ROL();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x28:
         // PLP impl
@@ -289,7 +292,7 @@ void CPU::clock_cycle()
         // ROL abs
         if (!ADDR_AB()) break;
         comp_val = OP_ROL();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x30:
         // BMI rel
@@ -316,7 +319,7 @@ void CPU::clock_cycle()
         // ROL zpg,X
         if (!ADDR_ZPX()) break;
         comp_val = OP_ROL();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x38:
         // SEC impl
@@ -337,7 +340,7 @@ void CPU::clock_cycle()
         // ROL abs,X
         if (!ADDR_ABX(false)) break;
         comp_val = OP_ROL();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x40:
         // RTI impl
@@ -356,6 +359,9 @@ void CPU::clock_cycle()
         break;
     case 0x46:
         // LSR zpg
+        if (!ADDR_ZP()) break;
+        comp_val = OP_LSR();
+        complete = WB_MEM(comp_val);
         break;
     case 0x48:
         // PHA impl
@@ -371,6 +377,9 @@ void CPU::clock_cycle()
         break;
     case 0x4A:
         // LSR A
+        if (!ADDR_IMP()) break;
+        comp_val = OP_LSR();
+        complete = WB_ACC(comp_val);
         break;
     case 0x4C:
         // JMP abs
@@ -383,6 +392,9 @@ void CPU::clock_cycle()
         break;
     case 0x4E:
         // LSR abs
+        if (!ADDR_AB()) break;
+        comp_val = OP_LSR();
+        complete = WB_MEM(comp_val);
         break;
     case 0x50:
         // BVC rel
@@ -407,6 +419,9 @@ void CPU::clock_cycle()
         break;
     case 0x56:
         // LSR zpg,X
+        if (!ADDR_ZPX()) break;
+        comp_val = OP_LSR();
+        complete = WB_MEM(comp_val);
         break;
     case 0x58:
         // CLI impl
@@ -425,6 +440,9 @@ void CPU::clock_cycle()
         break;
     case 0x5E:
         // LSR abs,X
+        if (!ADDR_ABX(false)) break;
+        comp_val = OP_LSR();
+        complete = WB_MEM(comp_val);
         break;
     case 0x60:
         // RTS impl
@@ -445,7 +463,7 @@ void CPU::clock_cycle()
         // ROR zpg
         if (!ADDR_ZP()) break;
         comp_val = OP_ROR();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x68:
         // PLA impl
@@ -475,7 +493,7 @@ void CPU::clock_cycle()
         // ROR abs
         if (!ADDR_AB()) break;
         comp_val = OP_ROR();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x70:
         // BVS rel
@@ -502,7 +520,7 @@ void CPU::clock_cycle()
         // ROR zpg,X
         if (!ADDR_ZPX()) break;
         comp_val = OP_ROR();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x78:
         // SEI impl
@@ -523,7 +541,7 @@ void CPU::clock_cycle()
         // ROR abs,X
         if (!ADDR_ABX(false)) break;
         comp_val = OP_ROR();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0x81:
         // STA X,ind
@@ -749,42 +767,67 @@ void CPU::clock_cycle()
         break;
     case 0xC0:
         // CPY #
+        if (!ADDR_IM()) break;
+        comp_val = OP_CMP(y);
+        complete = WB_NOP();
         break;
     case 0xC1:
         // CMP X,ind
+        if (!ADDR_INX()) break;
+        comp_val = OP_CMP(a);
+        complete = WB_NOP();
         break;
     case 0xC4:
         // CPY zpg
+        if (!ADDR_ZP()) break;
+        comp_val = OP_CMP(y);
+        complete = WB_NOP();
         break;
     case 0xC5:
         // CMP zpg
+        if (!ADDR_ZP()) break;
+        comp_val = OP_CMP(a);
+        complete = WB_NOP();
+        break;
         break;
     case 0xC6:
         // DEC zpg
         if (!ADDR_ZP()) break;
         comp_val = OP_DEC();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0xC8:
         // INY impl
         break;
     case 0xC9:
         // CMP #
+        if (!ADDR_IM()) break;
+        comp_val = OP_CMP(a);
+        complete = WB_NOP();
+        break;
         break;
     case 0xCA:
         // DEX impl
         break;
     case 0xCC:
         // CPY abs
+        if (!ADDR_AB()) break;
+        comp_val = OP_CMP(y);
+        complete = WB_NOP();
+        break;
         break;
     case 0xCD:
         // CMP abs
+        if (!ADDR_AB()) break;
+        comp_val = OP_CMP(a);
+        complete = WB_NOP();
+        break;
         break;
     case 0xCE:
         // DEC abs
         if (!ADDR_AB()) break;
         comp_val = OP_DEC();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0xD0:
         // BNE rel
@@ -797,69 +840,109 @@ void CPU::clock_cycle()
         break;
     case 0xD1:
         // CMP ind,Y
+        if (!ADDR_INY()) break;
+        comp_val = OP_CMP(a);
+        complete = WB_NOP();
+        break;
         break;
     case 0xD5:
         // CMP zpg,X
+        if (!ADDR_ZPX()) break;
+        comp_val = OP_CMP(a);
+        complete = WB_NOP();
+        break;
         break;
     case 0xD6:
         // DEC zpg,X
         if (!ADDR_ZPX()) break;
         comp_val = OP_DEC();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0xD8:
         // CLD impl
         break;
     case 0xD9:
         // CMP abs,Y
+        if (!ADDR_ABY()) break;
+        comp_val = OP_CMP(a);
+        complete = WB_NOP();
+        break;
         break;
     case 0xDD:
         // CMP abs,X
+        if (!ADDR_ABX()) break;
+        comp_val = OP_CMP(a);
+        complete = WB_NOP();
+        break;
         break;
     case 0xDE:
         // DEC abs,X
         if (!ADDR_ABX(false)) break;
         comp_val = OP_DEC();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0xE0:
         // CPX #
+        if (!ADDR_IM()) break;
+        comp_val = OP_CMP(x);
+        complete = WB_NOP();
+        break;
         break;
     case 0xE1:
         // SBC X,ind
+        if (!ADDR_INX()) break;
+        comp_val = OP_SBC();
+        complete = WB_ACC(comp_val);
         break;
     case 0xE4:
         // CPX zpg
+        if (!ADDR_ZP()) break;
+        comp_val = OP_CMP(x);
+        complete = WB_NOP();
+        break;
         break;
     case 0xE5:
         // SBC zpg
+        if (!ADDR_ZP()) break;
+        comp_val = OP_SBC();
+        complete = WB_ACC(comp_val);
         break;
     case 0xE6:
         // INC zpg
         if (!ADDR_ZP()) break;
         comp_val = OP_INC();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0xE8:
         // INX impl
         break;
     case 0xE9:
         // SBC #
+        if (!ADDR_IM()) break;
+        comp_val = OP_SBC();
+        complete = WB_ACC(comp_val);
         break;
     case 0xEA:
         // NOP impl
         break;
     case 0xEC:
         // CPX abs
+        if (!ADDR_AB()) break;
+        comp_val = OP_CMP(x);
+        complete = WB_NOP();
+        break;
         break;
     case 0xED:
         // SBC abs
+        if (!ADDR_AB()) break;
+        comp_val = OP_SBC();
+        complete = WB_ACC(comp_val);
         break;
     case 0xEE:
         // INC abs
         if (!ADDR_AB()) break;
         comp_val = OP_INC();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0xF0:
         // BEQ rel
@@ -872,30 +955,42 @@ void CPU::clock_cycle()
         break;
     case 0xF1:
         // SBC ind,Y
+        if (!ADDR_INY()) break;
+        comp_val = OP_SBC();
+        complete = WB_ACC(comp_val);
         break;
     case 0xF5:
         // SBC zpg,X
+        if (!ADDR_ZPX()) break;
+        comp_val = OP_SBC();
+        complete = WB_ACC(comp_val);
         break;
     case 0xF6:
         // INC zpg,X
         if (!ADDR_ZPX()) break;
         comp_val = OP_INC();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     case 0xF8:
         // SED impl
         break;
     case 0xF9:
         // SBC abs,Y
+        if (!ADDR_ABY()) break;
+        comp_val = OP_SBC();
+        complete = WB_ACC(comp_val);
         break;
     case 0xFD:
         // SBC abs,X
+        if (!ADDR_ABX()) break;
+        comp_val = OP_SBC();
+        complete = WB_ACC(comp_val);
         break;
     case 0xFE:
         // INC abs,X
         if (!ADDR_ABX(false)) break;
         comp_val = OP_INC();
-        complete = WB_MEM(comp_val);;
+        complete = WB_MEM(comp_val);
         break;
     default:
         complete = true;
@@ -1052,7 +1147,7 @@ bool CPU::ADDR_ABX(bool optimise)
         addr = (static_cast<uint16_t>(ins_stack[2])<<8) | (uint8_t)(ins_stack[1]+x);
         ins_stack.push_back(bus->get(addr));
         val = ins_stack[3];
-        if ((uint8_t)(ins_stack[1]+x) >= x && optimise) return true;;
+        if ((uint8_t)(ins_stack[1]+x) >= x && optimise) return true;
         break;
     case 4:
         if ((uint8_t)(ins_stack[1]+x) < x || !optimise)
@@ -1259,6 +1354,19 @@ bool CPU::ADDR_REL()
     return false;
 }
 
+bool CPU::ADDR_ABP_R()
+{
+    switch (ins_step)
+    {
+    case 1:
+        ins_stack.push_back(fetch(true));
+        addr = ins_stack[1];
+    default:
+        return true;
+    }
+    return false;
+}
+
 uint8_t CPU::OP_ORA()
 {
     uint8_t result = a | val;
@@ -1305,6 +1413,18 @@ uint8_t CPU::OP_ASL()
     return result;
 }
 
+uint8_t CPU::OP_LSR()
+{
+    p = p & ~(FLG_NEG | FLG_CRY | FLG_ZRO);
+    p |= (val & 0x01) ? FLG_CRY : 0;
+
+    uint8_t result = val >> 1;
+
+    p |= (result == 0) ? FLG_ZRO : 0;
+
+    return result;
+}
+
 uint8_t CPU::OP_ROL()
 {
 
@@ -1343,6 +1463,21 @@ uint8_t CPU::OP_ADC()
     p |= (result & 0x80) ? FLG_NEG : 0;
     p |= (result-carry < a) ? FLG_CRY : 0;
     p |= ((val ^ result) & (result ^ a))&0x80 ? FLG_OVR : 0;
+
+    return result;
+}
+
+uint8_t CPU::OP_SBC()
+{
+    uint8_t val_comp = ~val;
+    uint8_t borrow = (FLG_CRY&last_p) ? 1 : 0;
+    uint8_t result = a + val_comp + borrow;
+
+    p = p & ~(FLG_ZRO | FLG_NEG | FLG_CRY | FLG_OVR);
+    p |= (result == 0) ? FLG_ZRO : 0;
+    p |= (result & 0x80) ? FLG_NEG : 0;
+    p |= (result-borrow < a) ? FLG_CRY : 0;
+    p |= ((val_comp ^ result) & (result ^ a))&0x80 ? FLG_OVR : 0;
 
     return result;
 }
@@ -1386,6 +1521,18 @@ uint8_t CPU::OP_TST()
     p |= (val&0x80) ? FLG_NEG : 0;
     p |= (val&0x40) ? FLG_OVR : 0;
     p |= ((a&val) == 0) ? FLG_ZRO : 0;
+
+    return 0;
+}
+
+uint8_t CPU::OP_CMP(uint8_t cmpval)
+{
+    uint8_t res = cmpval - val;
+
+    p &= ~(FLG_NEG|FLG_CRY|FLG_ZRO);
+    p |= (res==0) ? FLG_ZRO : 0;
+    p |= (res&0x80) ? FLG_NEG : 0;
+    p |= (res <= cmpval) ? FLG_CRY : 0;
 
     return 0;
 }
@@ -1462,6 +1609,30 @@ bool CPU::BRANCH()
     case 3:
         ins_stack.push_back(bus->get((pc&0xFF00) | pcl));
         pc += (int8_t)addr;
+        return true;
+    }
+    return false;
+}
+
+bool CPU::WB_JSR()
+{
+    switch(ins_step)
+    {
+    case 1:
+        break;
+    case 2:
+        bus->get(0x0100+s);
+        break;
+    case 3:
+        bus->set(0x0100+s--, pc>>8);
+        break;
+    case 4:
+        bus->set(0x0100+s--, (uint8_t)pc);
+        break;
+    case 5:
+        addr |= fetch(true)<<8;
+        pc = addr;
+    default:
         return true;
     }
     return false;

@@ -49,21 +49,25 @@ private:
     bool ADDR_ZP_R();
     bool ADDR_ZPX_R();
     bool ADDR_AB_R();
+    bool ADDR_ABP_R();
     bool ADDR_ABX_R(bool optimise=true);
     bool ADDR_ABY_R(bool optimise=true);
     bool ADDR_INX_R();
     bool ADDR_INY_R(bool optimise=true);
 
     uint8_t OP_ADC();
+    uint8_t OP_SBC();
     uint8_t OP_ORA();
     uint8_t OP_AND();
     uint8_t OP_ASL();
+    uint8_t OP_LSR();
     uint8_t OP_EOR();
     uint8_t OP_ROL();
     uint8_t OP_ROR();
     uint8_t OP_DEC();
     uint8_t OP_INC();
     uint8_t OP_TST();
+    uint8_t OP_CMP(uint8_t cmpval);
     uint8_t OP_NOP(bool flag=false);
 
     bool WB_ACC(uint8_t val);
@@ -76,6 +80,7 @@ private:
     bool WB_BRK();
     bool WB_PHP();
     bool WB_PHA();
+    bool WB_JSR();
 
     bool BRANCH();
 };
