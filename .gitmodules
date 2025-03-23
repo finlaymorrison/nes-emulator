@@ -7,3 +7,6 @@
 [submodule "external/json"]
 	path = external/json
 	url = git@github.com:nlohmann/json.git
+[submodule "external/nes-test-roms"]
+	path = external/nes-test-roms
+	url = https://github.com/christopherpow/nes-test-roms
