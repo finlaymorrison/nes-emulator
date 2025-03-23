@@ -54,6 +54,7 @@ private:
     bool ADDR_INX_R();
     bool ADDR_INY_R(bool optimise=true);
 
+    uint8_t OP_ADC();
     uint8_t OP_ORA();
     uint8_t OP_AND();
     uint8_t OP_ASL();
@@ -68,8 +69,11 @@ private:
     bool WB_X(uint8_t val);
     bool WB_Y(uint8_t val);
     bool WB_MEM(uint8_t comp_val, bool delay=true);
+    bool WB_CLC();
     
     bool WB_BRK();
     bool WB_PHP();
     bool WB_PHA();
+
+    bool BRANCH();
 };

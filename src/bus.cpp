@@ -61,11 +61,19 @@ void Bus::analyse_operations(nlohmann::json json)
 
     for (size_t i = 0; i < operations.size(); ++i)
     {
-        BusOperationType type = (json[i][2].get<std::string>() == "read")
+        if (i < json.size())
+        {
+            BusOperationType type = (json[i][2].get<std::string>() == "read")
             ? BusOperationType::READ : BusOperationType::WRITE;
+            
+            std::cerr << "Expected: " << "[" << ((type == BusOperationType::READ) ? "read" : "write")
+                << "] A=" << json[i][0] << " V=" << json[i][1] << "  ";
+        }
+        else
+        {
+            std::cerr << "Expected: [EMPTY] ";
+        }
         
-        std::cerr << "Expected: " << "[" << ((type == BusOperationType::READ) ? "read" : "write")
-            << "] A=" << json[i][0] << " V=" << json[i][1] << "  ";
         std::cerr << "Observed: " << "[" << ((operations[i].type == BusOperationType::READ) ? "read" : "write")
             << "] A=" << operations[i].addr << " V=" << (int)operations[i].val << std::endl;
     }
