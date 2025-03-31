@@ -166,10 +166,7 @@ void CPU::clock_cycle()
     case 0x10:
         // BPL rel
         if (!(complete = ADDR_REL())) break;
-        if (FLG_NEG & p) {
-            complete = true;
-            break;
-        } 
+        if (complete = FLG_NEG & p) break;
         complete = BRANCH();
         break;
     case 0x11:
@@ -278,10 +275,7 @@ void CPU::clock_cycle()
     case 0x30:
         // BMI rel
         if (!(complete = ADDR_REL())) break;
-        if (!(FLG_NEG & p)) {
-            complete = true;
-            break;
-        } 
+        if (complete = !(FLG_NEG & p)) break;
         complete = BRANCH();
         break;
     case 0x31:
@@ -385,10 +379,7 @@ void CPU::clock_cycle()
     case 0x50:
         // BVC rel
         if (!(complete = ADDR_REL())) break;
-        if (FLG_OVR & p) {
-            complete = true;
-            break;
-        } 
+        if (complete = FLG_OVR & p) break;
         complete = BRANCH();
         break;
     case 0x51:
@@ -492,10 +483,7 @@ void CPU::clock_cycle()
     case 0x70:
         // BVS rel
         if (!(complete = ADDR_REL())) break;
-        if (!(FLG_OVR & p)) {
-            complete = true;
-            break;
-        } 
+        if (complete = !(FLG_OVR & p)) break;
         complete = BRANCH();
         break;
     case 0x71:
@@ -590,10 +578,7 @@ void CPU::clock_cycle()
     case 0x90:
         // BCC rel
         if (!(complete = ADDR_REL())) break;
-        if (FLG_CRY & p) {
-            complete = true;
-            break;
-        } 
+        if (complete = FLG_CRY & p) break;
         complete = BRANCH();
         break;
     case 0x91:
@@ -712,10 +697,7 @@ void CPU::clock_cycle()
     case 0xB0:
         // BCS rel
         if (!(complete = ADDR_REL())) break;
-        if (!(FLG_CRY & p)) {
-            complete = true;
-            break;
-        } 
+        if (complete = !(FLG_CRY & p)) break;
         complete = BRANCH();
         break;
     case 0xB1:
@@ -841,10 +823,7 @@ void CPU::clock_cycle()
     case 0xD0:
         // BNE rel
         if (!(complete = ADDR_REL())) break;
-        if (FLG_ZRO & p) {
-            complete = true;
-            break;
-        } 
+        if (complete = FLG_ZRO & p) break;
         complete = BRANCH();
         break;
     case 0xD1:
@@ -944,10 +923,7 @@ void CPU::clock_cycle()
     case 0xF0:
         // BEQ rel
         if (!(complete = ADDR_REL())) break;
-        if (!(FLG_ZRO & p)) {
-            complete = true;
-            break;
-        } 
+        if (complete = !(FLG_ZRO & p)) break;
         complete = BRANCH();
         break;
     case 0xF1:
