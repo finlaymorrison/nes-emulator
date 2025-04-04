@@ -12,10 +12,8 @@
 #define FLG_CRY 0b00000001
 
 CPU::CPU() :
-    pc{}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_stack{}, ins_step{0}, last_p{}
-{
-    ins_stack.reserve(10);
-}
+    pc{}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_step{0}, last_p{}
+{}
 
 void CPU::load_json(nlohmann::json json)
 {
@@ -99,9 +97,9 @@ bool CPU::WB_MEM(uint8_t comp_val, bool delay)
 
 void CPU::clock_cycle()
 {
-    if (ins_stack.size() == 0)
+    if (ins_step == 0)
     {
-        ins_stack.push_back(fetch(true));
+        opcode = fetch(true);
         ++ins_step;
         last_p = p;
         return;
@@ -109,7 +107,7 @@ void CPU::clock_cycle()
 
     int comp_val = 0;
     bool complete = true;
-    switch ((ins_stack[0]))
+    switch (opcode)
     {
     case 0x00:
         // BRK impl
@@ -971,9 +969,7 @@ void CPU::clock_cycle()
         ++ins_step;
         return;
     }
-
     ins_step = 0;
-    ins_stack.clear();
 }
 
 bool CPU::ADDR_IMP()
@@ -982,7 +978,6 @@ bool CPU::ADDR_IMP()
     {
     case 1:
         fetch(false);
-        ins_stack.push_back(a);
         val = a;
     default:
         return true;
@@ -995,8 +990,7 @@ bool CPU::ADDR_IM()
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
-        val = ins_stack[1];
+        val = fetch(true);
     default:
         return true;
     }
@@ -1008,12 +1002,10 @@ bool CPU::ADDR_ZP()
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
+        addr = fetch(true);
         break;
     case 2:
-        ins_stack.push_back(bus->get(ins_stack[1]));
-        addr = ins_stack[1];
-        val = ins_stack[2];
+        val = bus->get(addr);
     default:
         return true;
     }
@@ -1025,8 +1017,7 @@ bool CPU::ADDR_ZP_R()
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
-        addr = ins_stack[1];
+        addr = fetch(true);
     default:
         return true;
     }
@@ -1038,16 +1029,14 @@ bool CPU::ADDR_ZPX()
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
+        addr = fetch(true);
         break;
     case 2:
-        bus->get(ins_stack[1]);
-        ins_stack.push_back(ins_stack[1] + x);
+        bus->get(addr);
+        addr = static_cast<uint8_t>(addr + x);
         break;
     case 3:
-        ins_stack.push_back(bus->get(ins_stack[2]));
-        addr = ins_stack[2];
-        val = ins_stack[3];
+        val = bus->get(addr);
     default:
         return true;
     }
@@ -1059,16 +1048,14 @@ bool CPU::ADDR_ZPY()
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
+        addr = fetch(true);
         break;
     case 2:
-        bus->get(ins_stack[1]);
-        ins_stack.push_back(ins_stack[1] + y);
+        bus->get(addr);
+        addr = static_cast<uint8_t>(addr + y);
         break;
     case 3:
-        ins_stack.push_back(bus->get(ins_stack[2]));
-        addr = ins_stack[2];
-        val = ins_stack[3];
+        val = bus->get(addr);
     default:
         return true;
     }
@@ -1080,12 +1067,11 @@ bool CPU::ADDR_ZPX_R()
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
+        addr = fetch(true);
         break;
     case 2:
-        bus->get(ins_stack[1]);
-        ins_stack.push_back(ins_stack[1] + x);
-        addr = ins_stack[2];
+        bus->get(addr);
+        addr = static_cast<uint8_t>(addr + x);
     default:
         return true;
     }
@@ -1097,12 +1083,11 @@ bool CPU::ADDR_ZPY_R()
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
+        addr = fetch(true);
         break;
     case 2:
-        bus->get(ins_stack[1]);
-        ins_stack.push_back(ins_stack[1] + y);
-        addr = ins_stack[2];
+        bus->get(addr);
+        addr = static_cast<uint8_t>(addr + y);
     default:
         return true;
     }
@@ -1115,12 +1100,11 @@ bool CPU::ADDR_AB()
     {
     case 1:
     case 2:
-        ins_stack.push_back(fetch(true));
+        addr >>= 8;
+        addr |= fetch(true)<<;
         break;
     case 3:
-        addr = (uint16_t)ins_stack[2]<<8 | ins_stack[1];
-        ins_stack.push_back(bus->get(addr));
-        val = ins_stack[3];
+        val = bus->get(addr);
     default:
         return true;
     }
@@ -1132,11 +1116,11 @@ bool CPU::ADDR_AB_R()
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
+        addr = fetch(true)<<8;
         break;
     case 2:
-        ins_stack.push_back(fetch(true));
-        addr = (uint16_t)ins_stack[2]<<8 | ins_stack[1];
+        addr >>= 8;
+        addr |= fetch(true)<<8;
     default:
         return true;
     }
@@ -1149,20 +1133,24 @@ bool CPU::ADDR_ABX(bool optimise)
     {
     case 1:
     case 2:
-        ins_stack.push_back(fetch(true));
+        addr >>= 8;
+        addr |= fetch(true)<<8;
         break;
     case 3:
-        addr = (static_cast<uint16_t>(ins_stack[2])<<8) | (uint8_t)(ins_stack[1]+x);
-        ins_stack.push_back(bus->get(addr));
-        val = ins_stack[3];
-        if ((uint8_t)(ins_stack[1]+x) >= x && optimise) return true;
+        if ((uint8_t)(addr&0xFF + x) >= x && optimise)
+        {
+            val = bus->get(addr += x);
+            return true;
+        }
+        else
+        {
+            bus->get(addr&0xFF00 | static_cast<uint8_t>(addr&0xFF+x));
+        }
         break;
     case 4:
-        if ((uint8_t)(ins_stack[1]+x) < x || !optimise)
+        if ((uint8_t)(addr&0xFF + x) < x || !optimise)
         {
-            addr = (static_cast<uint16_t>(ins_stack[2])<<8) + ins_stack[1] + x;
-            ins_stack.push_back(bus->get(addr));
-            val = ins_stack[4];
+            val = bus->get(addr += x);
         }
     default:
         return true;
@@ -1175,18 +1163,22 @@ bool CPU::ADDR_ABX_R(bool optimise)
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
+        addr = fetch(true)<<8;
         break;
     case 2:
-        ins_stack.push_back(fetch(true));
-        addr = (static_cast<uint16_t>(ins_stack[2])<<8) | (uint8_t)(ins_stack[1]+x);
-        if ((uint8_t)(ins_stack[1]+x) >= x && optimise) return true;
+        addr >>= 8;
+        addr |= fetch(true)<<8;
+        if ((uint8_t)(addr&0xFF + x) >= x && optimise)
+        {
+            addr += x;
+            return true;
+        }
         break;
     case 3:
-        if ((uint8_t)(ins_stack[1]+x) < x || !optimise)
+        if ((uint8_t)(addr&0xFF + x) < x || !optimise)
         {
-            ins_stack.push_back(bus->get(addr));
-            addr = (static_cast<uint16_t>(ins_stack[2])<<8) + ins_stack[1] + x;
+            bus->get(addr&0xFF00 | static_cast<uint8_t>(addr&0xFF+x));
+            addr += x;
         }
     default:
         return true;
@@ -1200,20 +1192,24 @@ bool CPU::ADDR_ABY()
     {
     case 1:
     case 2:
-        ins_stack.push_back(fetch(true));
+        addr >>= 8;
+        addr |= fetch(true)<<8;
         break;
     case 3:
-        addr = (static_cast<uint16_t>(ins_stack[2])<<8) | (uint8_t)(ins_stack[1]+y);
-        ins_stack.push_back(bus->get(addr));
-        val = ins_stack[3];
-        if ((uint8_t)(ins_stack[1]+y) >= y) return true;
+        if ((uint8_t)(addr&0xFF + y) >= y)
+        {
+            val = bus->get(addr += y);
+            return true;
+        }
+        else
+        {
+            bus->get(addr&0xFF00 | static_cast<uint8_t>(addr&0xFF+y));
+        }
         break;
     case 4:
-        if ((uint8_t)(ins_stack[1]+y) < y)
+        if ((uint8_t)(addr&0xFF + y) < y)
         {
-            addr = (static_cast<uint16_t>(ins_stack[2])<<8) + ins_stack[1] + y;
-            ins_stack.push_back(bus->get(addr));
-            val = ins_stack[4];
+            val = bus->get(addr += y);
         }
     default:
         return true;
@@ -1226,18 +1222,22 @@ bool CPU::ADDR_ABY_R(bool optimise)
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
+        addr = fetch(true);
         break;
     case 2:
-        ins_stack.push_back(fetch(true));
-        addr = (static_cast<uint16_t>(ins_stack[2])<<8) | (uint8_t)(ins_stack[1]+y);
-        if ((uint8_t)(ins_stack[1]+y) >= y && optimise) return true;
+        addr <<= 8;
+        addr |= fetch(true);
+        if ((uint8_t)(addr&0xFF + y) >= y && optimise)
+        {
+            addr += y;
+            return true;
+        }
         break;
     case 3:
-        if ((uint8_t)(ins_stack[1]+y) < y || !optimise)
+        if ((uint8_t)(addr&0xFF + y) < y || !optimise)
         {
-            ins_stack.push_back(bus->get(addr));
-            addr = (static_cast<uint16_t>(ins_stack[2])<<8) + ins_stack[1] + y;
+            bus->get(addr&0xFF00 | static_cast<uint8_t>(addr&0xFF+y));
+            addr += y;
         }
     default:
         return true;
@@ -1250,20 +1250,21 @@ bool CPU::ADDR_INX()
     switch (ins_step)
     {
     case 1:
-        ins_stack.push_back(fetch(true));
+        addr = fetch(true);
         break;
     case 2:
-        bus->get(ins_stack[1]);
-        ins_stack.push_back(ins_stack[1] + x);
+        bus->get(addr);
+        addr = static_cast<uint8_t>(addr + x);
         break;
     case 3:
+        addr |= bus->get(addr&0xFF)<<8;
+        addr = addr&0xFF00 | static_cast<uint8_t>(addr+1);
+        break;
     case 4:
-        ins_stack.push_back(bus->get(ins_stack[2]++));
+        addr = addr&0xFF00 | bus->get(addr&0xFF);
         break;
     case 5:
-        addr = (static_cast<uint16_t>(ins_stack[4])<<8) | ins_stack[3];
-        ins_stack.push_back(bus->get(addr));
-        val = ins_stack[5];
+        val = bus->get(addr);
     default:
         return true;
     }

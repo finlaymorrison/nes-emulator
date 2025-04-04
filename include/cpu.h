@@ -18,7 +18,6 @@ private:
     uint8_t p;
 
     Bus *bus;
-    std::vector<uint8_t> ins_stack;
     int ins_step;
 public:
     CPU();
@@ -30,6 +29,7 @@ public:
     bool mid_instruction();
 private:
     uint8_t last_p; // I hate this
+    uint8_t opcode;
     uint16_t addr; // Effective address
     uint8_t val; // Address value
 
