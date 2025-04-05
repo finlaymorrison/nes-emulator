@@ -31,7 +31,9 @@ private:
     uint8_t last_p; // I hate this
     uint8_t opcode;
     uint16_t addr; // Effective address
+    uint16_t buf; // Buffer value
     uint8_t val; // Address value
+    int wb_cycle;
 
     uint8_t fetch(bool inc);
     
