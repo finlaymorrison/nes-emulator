@@ -115,845 +115,650 @@ void CPU::clock_cycle()
     {
     case 0x00: // BRK impl
         if (!ADDR_IMP()) return;
-        if (!WB_BRK()) return;;
+        if (!WB_BRK()) return;
         break;
     case 0x01: // ORA X,ind
-        if (!ADDR_INX()) break;
+        if (!ADDR_INX()) return;
         a = OP_ORA();
         break;
     case 0x05: // ORA zpg
-        if (!ADDR_ZP()) break;
+        if (!ADDR_ZP()) return;
         a = OP_ORA();
         break;
     case 0x06: // ASL zpg
-        if (!(complete = ADDR_ZP())) break;
-        comp_val = OP_ASL();
-        complete = WB_MEM(comp_val);
+        if (!ADDR_ZP()) return;
+        if (!WB_MEM(OP_ASL())) return;
         break;
-    case 0x08:
-        // PHP impl
-        if (!(complete = ADDR_IMP())) break;
-        complete = WB_PHP();
+    case 0x08: // PHP impl
+        if (!ADDR_IMP()) return;
+        if (!WB_PHP()) return;
         break;
-    case 0x09:
-        // ORA #
-        if (!(complete = ADDR_IM())) break;
-        comp_val = OP_ORA();
-        a = comp_val;
+    case 0x09: // ORA #
+        if (!ADDR_IM()) return;
+        a = OP_ORA();
         break;
-    case 0x0A:
-        // ASL A
-        if (!(complete = ADDR_IMP())) break;
-        comp_val = OP_ASL();
-        a = comp_val;
+    case 0x0A: // ASL A
+        if (!ADDR_IMP()) return;
+        a = OP_ASL();
         break;
-    case 0x0D:
-        // ORA abs
-        if (!(complete = ADDR_AB())) break;
-        comp_val = OP_ORA();
-        a = comp_val;
+    case 0x0D: // ORA abs
+        if (!ADDR_AB()) return;
+        a = OP_ORA();
         break;
-    case 0x0E:
-        // ASL abs
-        if (!(complete = ADDR_AB())) break;
-        comp_val = OP_ASL();
-        complete = WB_MEM(comp_val);
+    case 0x0E: // ASL abs
+        if (!ADDR_AB()) return;
+        if (!WB_MEM(OP_ASL())) return;
         break;
-    case 0x10:
-        // BPL rel
-        if (!(complete = ADDR_REL())) break;
-        if (complete = FLG_NEG & p) break;
-        complete = BRANCH();
+    case 0x10: // BPL rel
+        if (!ADDR_REL()) return;
+        if (FLG_NEG & p) break;
+        if (!BRANCH()) return;
         break;
-    case 0x11:
-        // ORA ind,y
-        if (!(complete = ADDR_INY())) break;
-        comp_val = OP_ORA();
-        a = comp_val;
+    case 0x11: // ORA ind,y
+        if (!ADDR_INY()) return;
+        a = OP_ORA();
         break;
-    case 0x15:
-        // ORA zpg,x
-        if (!(complete = zeropage_indexed(x))) break;
-        comp_val = OP_ORA();
-        a = comp_val;
+    case 0x15: // ORA zpg,x
+        if (!zeropage_indexed(x)) return;
+        a = OP_ORA();
         break;
-    case 0x16:
-        // ASL zpg,x
-        if (!(complete = zeropage_indexed(x))) break;
-        comp_val = OP_ASL();
-        complete = WB_MEM(comp_val);
+    case 0x16: // ASL zpg,x
+        if (!zeropage_indexed(x)) return;
+        if (!WB_MEM(OP_ASL())) return;
         break;
-    case 0x18:
-        // CLC impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0x18: // CLC impl
+        if (!ADDR_IMP()) return;
         clear_flag(FLG_CRY);
         break;
-    case 0x19:
-        // ORA abs,Y
-        if (!(complete = absolute_indexed(y, true))) break;
-        comp_val = OP_ORA();
-        a = comp_val;
+    case 0x19: // ORA abs,Y
+        if (!absolute_indexed(y, true)) return;
+        a = OP_ORA();
         break;
-    case 0x1D:
-        // ORA abs,X
-        if (!(complete = absolute_indexed(x, true))) break;
-        comp_val = OP_ORA();
-        a = comp_val;
+    case 0x1D: // ORA abs,X
+        if (!absolute_indexed(x, true)) return;
+        a = OP_ORA();
         break;
-    case 0x1E:
-        // ASL abs,X
-        if (!(complete = absolute_indexed(x, true, false))) break;
-        comp_val = OP_ASL();
-        complete = WB_MEM(comp_val);
+    case 0x1E: // ASL abs,X
+        if (!absolute_indexed(x, true, false)) return;
+        if (!WB_MEM(OP_ASL())) return;
         break;
-    case 0x20:
-        // JSR abs
-        if (!(complete = ADDR_ABP_R())) break;
-        complete = WB_JSR();
+    case 0x20: // JSR abs
+        if (!ADDR_ABP_R()) return;
+        if (!WB_JSR()) return;
         break;
-    case 0x21:
-        // AND X,ind
-        if (!(complete = ADDR_INX())) break;
-        comp_val = OP_AND();
-        a = comp_val;
+    case 0x21: // AND X,ind
+        if (!ADDR_INX()) return;
+        a = OP_AND();
         break;
-    case 0x24:
-        // BIT zpg
-        if (!(complete = ADDR_ZP())) break;
-        comp_val = OP_TST();
+    case 0x24: // BIT zpg
+        if (!ADDR_ZP()) return;
+        OP_TST();
         break;
-    case 0x25:
-        // AND zpg
-        if (!(complete = ADDR_ZP())) break;
-        comp_val = OP_AND();
-        a = comp_val;
+    case 0x25: // AND zpg
+        if (!ADDR_ZP()) return;
+        a = OP_AND();
         break;
-    case 0x26:
-        // ROL zpg
-        if (!(complete = ADDR_ZP())) break;
-        comp_val = OP_ROL();
-        complete = WB_MEM(comp_val);
+    case 0x26: // ROL zpg
+        if (!ADDR_ZP()) return;
+        if (!WB_MEM(OP_ROL())) return;
         break;
-    case 0x28:
-        // PLP impl
-        if (!(complete = ADDR_IMP())) break;
-        complete = WB_PLP();
+    case 0x28: // PLP impl
+        if (!ADDR_IMP()) return;
+        if (!WB_PLP()) return;
         break;
-    case 0x29:
-        // AND #
-        if (!(complete = ADDR_IM())) break;
-        comp_val = OP_AND();
-        a = comp_val;
+    case 0x29: // AND #
+        if (!ADDR_IM()) return;
+        a = OP_AND();
         break;
-    case 0x2A:
-        // ROL A
-        if (!(complete = ADDR_IMP())) break;
-        comp_val = OP_ROL();
-        a = comp_val;
+    case 0x2A: // ROL A
+        if (!ADDR_IMP()) return;
+        a = OP_ROL();
         break;
-    case 0x2C:
-        // BIT abs
-        if (!(complete = ADDR_AB())) break;
-        comp_val - OP_TST();
+    case 0x2C: // BIT abs
+        if (!ADDR_AB()) return;
+        OP_TST();
         break;
-    case 0x2D:
-        // AND abs
-        if (!(complete = ADDR_AB())) break;
-        comp_val = OP_AND();
-        a = comp_val;
+    case 0x2D: // AND abs
+        if (!ADDR_AB()) return;
+        a = OP_AND();
         break;
-    case 0x2E:
-        // ROL abs
-        if (!(complete = ADDR_AB())) break;
-        comp_val = OP_ROL();
-        complete = WB_MEM(comp_val);
+    case 0x2E: // ROL abs
+        if (!ADDR_AB()) return;
+        if (!WB_MEM(OP_ROL())) return;
         break;
-    case 0x30:
-        // BMI rel
-        if (!(complete = ADDR_REL())) break;
-        if (complete = !(FLG_NEG & p)) break;
-        complete = BRANCH();
+    case 0x30: // BMI rel
+        if (!ADDR_REL()) return;
+        if (!(FLG_NEG & p)) break;
+        if (!BRANCH()) return;
         break;
-    case 0x31:
-        // AND ind,Y
-        if (!(complete = ADDR_INY())) break;
-        comp_val = OP_AND();
-        a = comp_val;
+    case 0x31: // AND ind,Y
+        if (!ADDR_INY()) return;
+        a = OP_AND();
         break;
-    case 0x35:
-        // AND zpg,X
-        if (!(complete = zeropage_indexed(x))) break;
-        comp_val = OP_AND();
-        a = comp_val;
+    case 0x35: // AND zpg,X
+        if (!zeropage_indexed(x)) return;
+        a = OP_AND();
         break;
-    case 0x36:
-        // ROL zpg,X
-        if (!(complete = zeropage_indexed(x))) break;
-        comp_val = OP_ROL();
-        complete = WB_MEM(comp_val);
+    case 0x36: // ROL zpg,X
+        if (!zeropage_indexed(x)) return;
+        if (!WB_MEM(OP_ROL())) return;
         break;
-    case 0x38:
-        // SEC impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0x38: // SEC impl
+        if (!ADDR_IMP()) return;
         set_flag(FLG_CRY);
         break;
-    case 0x39:
-        // AND abs,Y
-        if (!(complete = absolute_indexed(y, true))) break;
-        comp_val = OP_AND();
-        a = comp_val;
+    case 0x39: // AND abs,Y
+        if (!absolute_indexed(y, true)) return;
+        a = OP_AND();
         break;
-    case 0x3D:
-        // AND abs,X
-        if (!(complete = absolute_indexed(x, true))) break;
-        comp_val = OP_AND();
-        a = comp_val;
+    case 0x3D: // AND abs,X
+        if (!absolute_indexed(x, true)) return;
+        a = OP_AND();
         break;
-    case 0x3E:
-        // ROL abs,X
-        if (!(complete = absolute_indexed(x, true, false))) break;
-        comp_val = OP_ROL();
-        complete = WB_MEM(comp_val);
+    case 0x3E: // ROL abs,X
+        if (!absolute_indexed(x, true, false)) return;
+        if (!WB_MEM(OP_ROL())) return;
         break;
-    case 0x40:
-        // RTI impl
-        if (!(complete = ADDR_IMP())) break;
-        complete = WB_RTI();
+    case 0x40: // RTI impl
+        if (!ADDR_IMP()) return;
+        if (!WB_RTI()) return;
         break;
-    case 0x41:
-        // EOR X,ind
-        if (!(complete = ADDR_INX())) break;
-        comp_val = OP_EOR();
-        a = comp_val;
+    case 0x41: // EOR X,ind
+        if (!ADDR_INX()) return;
+        a = OP_EOR();
         break;
-    case 0x45:
-        // EOR zpg
-        if (!(complete = ADDR_ZP())) break;
-        comp_val = OP_EOR();
-        a = comp_val;
+    case 0x45: // EOR zpg
+        if (!ADDR_ZP()) return;
+        a = OP_EOR();
         break;
-    case 0x46:
-        // LSR zpg
-        if (!(complete = ADDR_ZP())) break;
-        comp_val = OP_LSR();
-        complete = WB_MEM(comp_val);
+    case 0x46: // LSR zpg
+        if (!ADDR_ZP()) return;
+        if (!WB_MEM(OP_LSR())) return;
         break;
-    case 0x48:
-        // PHA impl
-        if (!(complete = ADDR_IMP())) break;
-        complete = WB_PHA();
+    case 0x48: // PHA impl
+        if (!ADDR_IMP()) return;
+        if (!WB_PHA()) return;
         break;
-    case 0x49:
-        // EOR #
-        if (!(complete = ADDR_IM())) break;
-        comp_val = OP_EOR();
-        a = comp_val;
+    case 0x49: // EOR #
+        if (!ADDR_IM()) return;
+        a = OP_EOR();
         break;
-    case 0x4A:
-        // LSR A
-        if (!(complete = ADDR_IMP())) break;
-        comp_val = OP_LSR();
-        a = comp_val;
+    case 0x4A: // LSR A
+        if (!ADDR_IMP()) return;
+        a = OP_LSR();
         break;
-    case 0x4C:
-        // JMP abs
-        if (!(complete = ADDR_AB_R())) break;
+    case 0x4C: // JMP abs
+        if (!ADDR_AB_R()) return;
         pc = addr;
         break;
-    case 0x4D:
-        // EOR abs
-        if (!(complete = ADDR_AB())) break;
-        comp_val = OP_EOR();
-        a = comp_val;
+    case 0x4D: // EOR abs
+        if (!ADDR_AB()) return;
+        a = OP_EOR();
         break;
-    case 0x4E:
-        // LSR abs
-        if (!(complete = ADDR_AB())) break;
-        comp_val = OP_LSR();
-        complete = WB_MEM(comp_val);
+    case 0x4E: // LSR abs
+        if (!ADDR_AB()) return;
+        if (!WB_MEM(OP_LSR())) return;
         break;
-    case 0x50:
-        // BVC rel
-        if (!(complete = ADDR_REL())) break;
-        if (complete = FLG_OVR & p) break;
-        complete = BRANCH();
+    case 0x50: // BVC rel
+        if (!ADDR_REL()) return;
+        if (FLG_OVR & p) break;
+        if (!BRANCH()) return;
         break;
-    case 0x51:
-        // EOR ind,Y
-        if (!(complete = ADDR_INY())) break;
-        comp_val = OP_EOR();
-        a = comp_val;
+    case 0x51: // EOR ind,Y
+        if (!ADDR_INY()) return;
+        a = OP_EOR();
         break;
-    case 0x55:
-        // EOR zpg,X
-        if (!(complete = zeropage_indexed(x))) break;
-        comp_val = OP_EOR();
-        a = comp_val;
+    case 0x55: // EOR zpg,X
+        if (!zeropage_indexed(x)) return;
+        a = OP_EOR();
         break;
-    case 0x56:
-        // LSR zpg,X
-        if (!(complete = zeropage_indexed(x))) break;
-        comp_val = OP_LSR();
-        complete = WB_MEM(comp_val);
+    case 0x56: // LSR zpg,X
+        if (!zeropage_indexed(x)) return;
+        if (!WB_MEM(OP_LSR())) return;
         break;
-    case 0x58:
-        // CLI impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0x58: // CLI impl
+        if (!ADDR_IMP()) return;
         clear_flag(FLG_INT);
         break;
-    case 0x59:
-        // EOR abs,Y
-        if (!(complete = absolute_indexed(y, true))) break;
-        comp_val = OP_EOR();
-        a = comp_val;
+    case 0x59: // EOR abs,Y
+        if (!absolute_indexed(y, true)) return;
+        a = OP_EOR();
         break;
-    case 0x5D:
-        // EOR abs,X
-        if (!(complete = absolute_indexed(x, true))) break;
-        comp_val = OP_EOR();
-        a = comp_val;
+    case 0x5D: // EOR abs,X
+        if (!absolute_indexed(x, true)) return;
+        a = OP_EOR();
         break;
-    case 0x5E:
-        // LSR abs,X
-        if (!(complete = absolute_indexed(x, true, false))) break;
-        comp_val = OP_LSR();
-        complete = WB_MEM(comp_val);
+    case 0x5E: // LSR abs,X
+        if (!absolute_indexed(x, true, false)) return;
+        if (!WB_MEM(OP_LSR())) return;
         break;
-    case 0x60:
-        // RTS impl
-        if (!(complete = ADDR_IMP())) break;
-        complete = WB_RTS();
+    case 0x60: // RTS impl
+        if (!ADDR_IMP()) return;
+        if (!WB_RTS()) return;
         break;
-    case 0x61:
-        // ADC X,ind
-        if (!(complete = ADDR_INX())) break;
-        comp_val = OP_ADC();
-        a = comp_val;
+    case 0x61: // ADC X,ind
+        if (!ADDR_INX()) return;
+        a = OP_ADC();
         break;
-    case 0x65:
-        // ADC zpg
-        if (!(complete = ADDR_ZP())) break;
-        comp_val = OP_ADC();
-        a = comp_val;
+    case 0x65: // ADC zpg
+        if (!ADDR_ZP()) return;
+        a = OP_ADC();
         break;
-    case 0x66:
-        // ROR zpg
-        if (!(complete = ADDR_ZP())) break;
-        comp_val = OP_ROR();
-        complete = WB_MEM(comp_val);
+    case 0x66: // ROR zpg
+        if (!ADDR_ZP()) return;
+        if (!WB_MEM(OP_ROR())) return;
         break;
-    case 0x68:
-        // PLA impl
-        if (!(complete = ADDR_IMP())) break;
-        complete = WB_PLA();
+    case 0x68: // PLA impl
+        if (!ADDR_IMP()) return;
+        if (!WB_PLA()) return;
         break;
-    case 0x69:
-        // ADC #
-        if (!(complete = ADDR_IM())) break;
-        comp_val = OP_ADC();
-        a = comp_val;
+    case 0x69: // ADC #
+        if (!ADDR_IM()) return;
+        a = OP_ADC();
         break;
-    case 0x6A:
-        // ROR A
-        if (!(complete = ADDR_IMP())) break;
-        comp_val = OP_ROR();
-        a = comp_val;
+    case 0x6A: // ROR A
+        if (!ADDR_IMP()) return;
+        a = OP_ROR();
         break;
-    case 0x6C:
-        // JMP ind
-        if (!(complete = ADDR_IN_R())) break;
+    case 0x6C: // JMP ind
+        if (!ADDR_IN_R()) return;
         pc = addr;
         break;
-    case 0x6D:
-        // ADC abs
-        if (!(complete = ADDR_AB())) break;
-        comp_val = OP_ADC();
-        a = comp_val;
+    case 0x6D: // ADC abs
+        if (!ADDR_AB()) return;
+        a = OP_ADC();
         break;
-    case 0x6E:
-        // ROR abs
-        if (!(complete = ADDR_AB())) break;
-        comp_val = OP_ROR();
-        complete = WB_MEM(comp_val);
+    case 0x6E: // ROR abs
+        if (!ADDR_AB()) return;
+        if (!WB_MEM(OP_ROR())) return;
         break;
-    case 0x70:
-        // BVS rel
-        if (!(complete = ADDR_REL())) break;
-        if (complete = !(FLG_OVR & p)) break;
-        complete = BRANCH();
+    case 0x70: // BVS rel
+        if (!ADDR_REL()) return;
+        if (!(FLG_OVR & p)) break;
+        if (!BRANCH()) return;
         break;
-    case 0x71:
-        // ADC ind,Y
-        if (!(complete = ADDR_INY())) break;
-        comp_val = OP_ADC();
-        a = comp_val;
+    case 0x71: // ADC ind,Y
+        if (!ADDR_INY()) return;
+        a = OP_ADC();
         break;
-    case 0x75:
-        // ADC zpg,X
-        if (!(complete = zeropage_indexed(x))) break;
-        comp_val = OP_ADC();
-        a = comp_val;
+    case 0x75: // ADC zpg,X
+        if (!zeropage_indexed(x)) return;
+        a = OP_ADC();
         break;
-    case 0x76:
-        // ROR zpg,X
-        if (!(complete = zeropage_indexed(x))) break;
-        comp_val = OP_ROR();
-        complete = WB_MEM(comp_val);
+    case 0x76: // ROR zpg,X
+        if (!zeropage_indexed(x)) return;
+        if (!WB_MEM(OP_ROR())) return;
         break;
-    case 0x78:
-        // SEI impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0x78: // SEI impl
+        if (!ADDR_IMP()) return;
         set_flag(FLG_INT);
         break;
-    case 0x79:
-        // ADC abs,Y
-        if (!(complete = absolute_indexed(y, true))) break;
-        comp_val = OP_ADC();
-        a = comp_val;
+    case 0x79: // ADC abs,Y
+        if (!absolute_indexed(y, true)) return;
+        a = OP_ADC();
         break;
-    case 0x7D:
-        // ADC abs,X
-        if (!(complete = absolute_indexed(x, true))) break;
-        comp_val = OP_ADC();
-        a = comp_val;
+    case 0x7D: // ADC abs,X
+        if (!absolute_indexed(x, true)) return;
+        a = OP_ADC();
         break;
-    case 0x7E:
-        // ROR abs,X
-        if (!(complete = absolute_indexed(x, true, false))) break;
-        comp_val = OP_ROR();
-        complete = WB_MEM(comp_val);
+    case 0x7E: // ROR abs,X
+        if (!absolute_indexed(x, true, false)) return;
+        if (!WB_MEM(OP_ROR())) return;;
         break;
-    case 0x81:
-        // STA X,ind
-        if (!(complete = ADDR_INX_R())) break;
-        complete = WB_MEM(a, false);
+    case 0x81: // STA X,ind
+        if (!ADDR_INX_R()) return;
+        if (!WB_MEM(a, false)) return;
         break;
-    case 0x84:
-        // STY zpg
-        if (!(complete = ADDR_ZP_R())) break;
+    case 0x84: // STY zpg
+        if (!ADDR_ZP_R()) return;
         complete = WB_MEM(y, false);
         break;
-    case 0x85:
-        // STA zpg
-        if (!(complete = ADDR_ZP_R())) break;
+    case 0x85: // STA zpg
+        if (!ADDR_ZP_R()) return;
         complete = WB_MEM(a, false);
         break;
-    case 0x86:
-        // STX zpg
-        if (!(complete = ADDR_ZP_R())) break;
+    case 0x86: // STX zpg
+        if (!ADDR_ZP_R()) return;
         complete = WB_MEM(x, false);
         break;
-    case 0x88:
-        // DEY impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0x88: // DEY impl
+        if (!ADDR_IMP()) return;
         val = y;
         comp_val = OP_DEC();
         y = comp_val;
         break;
-    case 0x8A:
-        // TXA impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0x8A: // TXA impl
+        if (!ADDR_IMP()) return;
         OP_FLG(x);
         a = x;
         break;
-    case 0x8C:
-        // STY abs
-        if (!(complete = ADDR_AB_R())) break;
+    case 0x8C: // STY abs
+        if (!ADDR_AB_R()) return;
         complete = WB_MEM(y, false);
         break;
-    case 0x8D:
-        // STA abs
-        if (!(complete = ADDR_AB_R())) break;
+    case 0x8D: // STA abs
+        if (!ADDR_AB_R()) return;
         complete = WB_MEM(a, false);
         break;
-    case 0x8E:
-        // STX abs
-        if (!(complete = ADDR_AB_R())) break;
+    case 0x8E: // STX abs
+        if (!ADDR_AB_R()) return;
         complete = WB_MEM(x, false);
         break;
-    case 0x90:
-        // BCC rel
-        if (!(complete = ADDR_REL())) break;
+    case 0x90: // BCC rel
+        if (!ADDR_REL()) return;
         if (complete = FLG_CRY & p) break;
         complete = BRANCH();
         break;
-    case 0x91:
-        // STA ind,Y
+    case 0x91: // STA ind,Y
         if (!(complete = ADDR_INY_R(false))) break;
         complete = WB_MEM(a, false);
         break;
-    case 0x94:
-        // STY zpg,X
+    case 0x94: // STY zpg,X
         if (!(complete = zeropage_indexed(x, false))) break;
         complete = WB_MEM(y, false);
         break;
-    case 0x95:
-        // STA zpg,X
+    case 0x95: // STA zpg,X
         if (!(complete = zeropage_indexed(x, false))) break;
         complete = WB_MEM(a, false);
         break;
-    case 0x96:
-        // STX zpg,y
+    case 0x96: // STX zpg,y
         if (!(complete = zeropage_indexed(y, false))) break;
         complete = WB_MEM(x, false);
         break;
-    case 0x98:
-        // TYA impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0x98: // TYA impl
+        if (!ADDR_IMP()) return;
         OP_FLG(y);
         a = y;
         break;
-    case 0x99:
-        // STA abs,Y
+    case 0x99: // STA abs,Y
         if (!(complete = absolute_indexed(y, false, false))) break;
         complete = WB_MEM(a, false);
         break;
-    case 0x9A:
-        // TXS impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0x9A: // TXS impl
+        if (!ADDR_IMP()) return;
         s = x;
         break;
-    case 0x9D:
-        // STA abs,X
+    case 0x9D: // STA abs,X
         if (!(complete = absolute_indexed(x, false, false))) break;
         complete = WB_MEM(a, false);
         break;
-    case 0xA0:
-        // LDY #
-        if (!(complete = ADDR_IM())) break;
+    case 0xA0: // LDY #
+        if (!ADDR_IM()) return;
         OP_FLG(val);
         y = val;
         break;
-    case 0xA1:
-        // LDA X,ind
-        if (!(complete = ADDR_INX())) break;
+    case 0xA1: // LDA X,ind
+        if (!ADDR_INX()) return;
         OP_FLG(val);
         a = val;
         break;
-    case 0xA2:
-        // LDX #
-        if (!(complete = ADDR_IM())) break;
+    case 0xA2: // LDX #
+        if (!ADDR_IM()) return;
         OP_FLG(val);
         x = val;
         break;
-    case 0xA4:
-        // LDY zpg
-        if (!(complete = ADDR_ZP())) break;
+    case 0xA4: // LDY zpg
+        if (!ADDR_ZP()) return;
         OP_FLG(val);
         y = val;
         break;
-    case 0xA5:
-        // LDA zpg
-        if (!(complete = ADDR_ZP())) break;
+    case 0xA5: // LDA zpg
+        if (!ADDR_ZP()) return;
         OP_FLG(val);
         a = val;
         break;
-    case 0xA6:
-        // LDX zpg
-        if (!(complete = ADDR_ZP())) break;
+    case 0xA6: // LDX zpg
+        if (!ADDR_ZP()) return;
         OP_FLG(val);
         x = val;
         break;
-    case 0xA8:
-        // TAY impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0xA8: // TAY impl
+        if (!ADDR_IMP()) return;
         OP_FLG(a);
         y = a;
         break;
-    case 0xA9:
-        // LDA #
-        if (!(complete = ADDR_IM())) break;
+    case 0xA9: // LDA #
+        if (!ADDR_IM()) return;
         OP_FLG(val);
         a = val;
         break;
-    case 0xAA:
-        // TAX impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0xAA: // TAX impl
+        if (!ADDR_IMP()) return;
         OP_FLG(a);
         x = a;
         break;
-    case 0xAC:
-        // LDY abs
-        if (!(complete = ADDR_AB())) break;
+    case 0xAC: // LDY abs
+        if (!ADDR_AB()) return;
         OP_FLG(val);
         y = val;
         break;
-    case 0xAD:
-        // LDA abs
-        if (!(complete = ADDR_AB())) break;
+    case 0xAD: // LDA abs
+        if (!ADDR_AB()) return;
         OP_FLG(val);
         a = val;
         break;
-    case 0xAE:
-        // LDX abs
-        if (!(complete = ADDR_AB())) break;
+    case 0xAE: // LDX abs
+        if (!ADDR_AB()) return;
         OP_FLG(val);
         x = val;
         break;
-    case 0xB0:
-        // BCS rel
-        if (!(complete = ADDR_REL())) break;
+    case 0xB0: // BCS rel
+        if (!ADDR_REL()) return;
         if (complete = !(FLG_CRY & p)) break;
         complete = BRANCH();
         break;
-    case 0xB1:
-        // LDA ind,Y
-        if (!(complete = ADDR_INY())) break;
+    case 0xB1: // LDA ind,Y
+        if (!ADDR_INY()) return;
         OP_FLG(val);
         a = val;
         break;
-    case 0xB4:
-        // LDY zpg,X
+    case 0xB4: // LDY zpg,X
         if (!(complete = zeropage_indexed(x))) break;
         OP_FLG(val);
         y = val;
         break;
-    case 0xB5:
-        // LDA zpg,X
+    case 0xB5: // LDA zpg,X
         if (!(complete = zeropage_indexed(x))) break;
         OP_FLG(val);
         a = val;
         break;
-    case 0xB6:
-        // LDX zpg,Y
+    case 0xB6: // LDX zpg,Y
         if (!(complete = zeropage_indexed(y))) break;
         OP_FLG(val);
         x = val;
         break;
-    case 0xB8:
-        // CLV impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0xB8: // CLV impl
+        if (!ADDR_IMP()) return;
         clear_flag(FLG_OVR);
         break;
-    case 0xB9:
-        // LDA abs,Y
+    case 0xB9: // LDA abs,Y
         if (!(complete = absolute_indexed(y, true))) break;
         OP_FLG(val);
         a = val;
         break;
-    case 0xBA:
-        // TSX impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0xBA: // TSX impl
+        if (!ADDR_IMP()) return;
         OP_FLG(s);
         x = s;
         break;
-    case 0xBC:
-        // LDY abs,X
+    case 0xBC: // LDY abs,X
         if (!(complete = absolute_indexed(x, true))) break;
         OP_FLG(val);
         y = val;
         break;
-    case 0xBD:
-        // LDA abs,X
+    case 0xBD: // LDA abs,X
         if (!(complete = absolute_indexed(x, true))) break;
         OP_FLG(val);
         a = val;
         break;
-    case 0xBE:
-        // LDX abs,Y
+    case 0xBE: // LDX abs,Y
         if (!(complete = absolute_indexed(y, true))) break;
         OP_FLG(val);
         x = val;
         break;
-    case 0xC0:
-        // CPY #
-        if (!(complete = ADDR_IM())) break;
+    case 0xC0: // CPY #
+        if (!ADDR_IM()) return;
         comp_val = OP_CMP(y);
         break;
-    case 0xC1:
-        // CMP X,ind
-        if (!(complete = ADDR_INX())) break;
+    case 0xC1: // CMP X,ind
+        if (!ADDR_INX()) return;
         comp_val = OP_CMP(a);
         break;
-    case 0xC4:
-        // CPY zpg
-        if (!(complete = ADDR_ZP())) break;
+    case 0xC4: // CPY zpg
+        if (!ADDR_ZP()) return;
         comp_val = OP_CMP(y);
         break;
-    case 0xC5:
-        // CMP zpg
-        if (!(complete = ADDR_ZP())) break;
+    case 0xC5: // CMP zpg
+        if (!ADDR_ZP()) return;
         comp_val = OP_CMP(a);
         break;
-    case 0xC6:
-        // DEC zpg
-        if (!(complete = ADDR_ZP())) break;
+    case 0xC6: // DEC zpg
+        if (!ADDR_ZP()) return;
         comp_val = OP_DEC();
         complete = WB_MEM(comp_val);
         break;
-    case 0xC8:
-        // INY impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0xC8: // INY impl
+        if (!ADDR_IMP()) return;
         val = y;
         comp_val = OP_INC();
         y = comp_val;
         break;
-    case 0xC9:
-        // CMP #
-        if (!(complete = ADDR_IM())) break;
+    case 0xC9: // CMP #
+        if (!ADDR_IM()) return;
         comp_val = OP_CMP(a);
         break;
-    case 0xCA:
-        // DEX impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0xCA: // DEX impl
+        if (!ADDR_IMP()) return;
         val = x;
         comp_val = OP_DEC();
         x = comp_val;
         break;
-    case 0xCC:
-        // CPY abs
-        if (!(complete = ADDR_AB())) break;
+    case 0xCC: // CPY abs
+        if (!ADDR_AB()) return;
         comp_val = OP_CMP(y);
         break;
-    case 0xCD:
-        // CMP abs
-        if (!(complete = ADDR_AB())) break;
+    case 0xCD: // CMP abs
+        if (!ADDR_AB()) return;
         comp_val = OP_CMP(a);
         break;
-    case 0xCE:
-        // DEC abs
-        if (!(complete = ADDR_AB())) break;
+    case 0xCE: // DEC abs
+        if (!ADDR_AB()) return;
         comp_val = OP_DEC();
         complete = WB_MEM(comp_val);
         break;
-    case 0xD0:
-        // BNE rel
-        if (!(complete = ADDR_REL())) break;
+    case 0xD0: // BNE rel
+        if (!ADDR_REL()) return;
         if (complete = FLG_ZRO & p) break;
         complete = BRANCH();
         break;
-    case 0xD1:
-        // CMP ind,Y
-        if (!(complete = ADDR_INY())) break;
+    case 0xD1: // CMP ind,Y
+        if (!ADDR_INY()) return;
         comp_val = OP_CMP(a);
         break;
-    case 0xD5:
-        // CMP zpg,X
+    case 0xD5: // CMP zpg,X
         if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_CMP(a);
         break;
-    case 0xD6:
-        // DEC zpg,X
+    case 0xD6: // DEC zpg,X
         if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_DEC();
         complete = WB_MEM(comp_val);
         break;
-    case 0xD9:
-        // CMP abs,Y
+    case 0xD9: // CMP abs,Y
         if (!(complete = absolute_indexed(y, true))) break;
         comp_val = OP_CMP(a);
         break;
-    case 0xDD:
-        // CMP abs,X
+    case 0xDD: // CMP abs,X
         if (!(complete = absolute_indexed(x, true))) break;
         comp_val = OP_CMP(a);
         break;
-    case 0xDE:
-        // DEC abs,X
+    case 0xDE: // DEC abs,X
         if (!(complete = absolute_indexed(x, true, false))) break;
         comp_val = OP_DEC();
         complete = WB_MEM(comp_val);
         break;
-    case 0xE0:
-        // CPX #
-        if (!(complete = ADDR_IM())) break;
+    case 0xE0: // CPX #
+        if (!ADDR_IM()) return;
         comp_val = OP_CMP(x);
         break;
-    case 0xE1:
-        // SBC X,ind
-        if (!(complete = ADDR_INX())) break;
+    case 0xE1: // SBC X,ind
+        if (!ADDR_INX()) return;
         comp_val = OP_SBC();
         a = comp_val;
         break;
-    case 0xE4:
-        // CPX zpg
-        if (!(complete = ADDR_ZP())) break;
+    case 0xE4: // CPX zpg
+        if (!ADDR_ZP()) return;
         comp_val = OP_CMP(x);
         break;
-    case 0xE5:
-        // SBC zpg
-        if (!(complete = ADDR_ZP())) break;
+    case 0xE5: // SBC zpg
+        if (!ADDR_ZP()) return;
         comp_val = OP_SBC();
         a = comp_val;
         break;
-    case 0xE6:
-        // INC zpg
-        if (!(complete = ADDR_ZP())) break;
+    case 0xE6: // INC zpg
+        if (!ADDR_ZP()) return;
         comp_val = OP_INC();
         complete = WB_MEM(comp_val);
         break;
-    case 0xE8:
-        // INX impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0xE8: // INX impl
+        if (!ADDR_IMP()) return;
         val = x;
         comp_val = OP_INC();
         x = comp_val;
         break;
-    case 0xE9:
-        // SBC #
-        if (!(complete = ADDR_IM())) break;
+    case 0xE9: // SBC #
+        if (!ADDR_IM()) return;
         comp_val = OP_SBC();
         a = comp_val;
         break;
-    case 0xEA:
-        // NOP impl
-        if (!(complete = ADDR_IMP())) break;
+    case 0xEA: // NOP impl
+        if (!ADDR_IMP()) return;
         break;
-    case 0xEC:
-        // CPX abs
-        if (!(complete = ADDR_AB())) break;
+    case 0xEC: // CPX abs
+        if (!ADDR_AB()) return;
         comp_val = OP_CMP(x);
         break;
-    case 0xED:
-        // SBC abs
-        if (!(complete = ADDR_AB())) break;
+    case 0xED: // SBC abs
+        if (!ADDR_AB()) return;
         comp_val = OP_SBC();
         a = comp_val;
         break;
-    case 0xEE:
-        // INC abs
-        if (!(complete = ADDR_AB())) break;
+    case 0xEE: // INC abs
+        if (!ADDR_AB()) return;
         comp_val = OP_INC();
         complete = WB_MEM(comp_val);
         break;
-    case 0xF0:
-        // BEQ rel
-        if (!(complete = ADDR_REL())) break;
+    case 0xF0: // BEQ rel
+        if (!ADDR_REL()) return;
         if (complete = !(FLG_ZRO & p)) break;
         complete = BRANCH();
         break;
-    case 0xF1:
-        // SBC ind,Y
-        if (!(complete = ADDR_INY())) break;
+    case 0xF1: // SBC ind,Y
+        if (!ADDR_INY()) return;
         comp_val = OP_SBC();
         a = comp_val;
         break;
-    case 0xF5:
-        // SBC zpg,X
+    case 0xF5: // SBC zpg,X
         if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_SBC();
         a = comp_val;
         break;
-    case 0xF6:
-        // INC zpg,X
+    case 0xF6: // INC zpg,X
         if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_INC();
         complete = WB_MEM(comp_val);
         break;
-    case 0xF9:
-        // SBC abs,Y
+    case 0xF9: // SBC abs,Y
         if (!(complete = absolute_indexed(y, true))) break;
         comp_val = OP_SBC();
         a = comp_val;
         break;
-    case 0xFD:
-        // SBC abs,X
+    case 0xFD: // SBC abs,X
         if (!(complete = absolute_indexed(x, true))) break;
         comp_val = OP_SBC();
         a = comp_val;
         break;
-    case 0xFE:
-        // INC abs,X
+    case 0xFE: // INC abs,X
         if (!(complete = absolute_indexed(x, true, false))) break;
         comp_val = OP_INC();
         complete = WB_MEM(comp_val);
