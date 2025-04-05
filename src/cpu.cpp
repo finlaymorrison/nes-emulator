@@ -181,13 +181,13 @@ void CPU::clock_cycle()
         break;
     case 0x15:
         // ORA zpg,x
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_ORA();
         a = comp_val;
         break;
     case 0x16:
         // ASL zpg,x
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_ASL();
         complete = WB_MEM(comp_val);
         break;
@@ -198,19 +198,19 @@ void CPU::clock_cycle()
         break;
     case 0x19:
         // ORA abs,Y
-        if (!(complete = ADDR_ABY())) break;
+        if (!(complete = absolute_indexed(y))) break;
         comp_val = OP_ORA();
         a = comp_val;
         break;
     case 0x1D:
         // ORA abs,X
-        if (!(complete = ADDR_ABX())) break;
+        if (!(complete = absolute_indexed(x))) break;
         comp_val = OP_ORA();
         a = comp_val;
         break;
     case 0x1E:
         // ASL abs,X
-        if (!(complete = ADDR_ABX(false))) break;
+        if (!(complete = absolute_indexed(x, false))) break;
         comp_val = OP_ASL();
         complete = WB_MEM(comp_val);
         break;
@@ -290,13 +290,13 @@ void CPU::clock_cycle()
         break;
     case 0x35:
         // AND zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_AND();
         a = comp_val;
         break;
     case 0x36:
         // ROL zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_ROL();
         complete = WB_MEM(comp_val);
         break;
@@ -307,19 +307,19 @@ void CPU::clock_cycle()
         break;
     case 0x39:
         // AND abs,Y
-        if (!(complete = ADDR_ABY())) break;
+        if (!(complete = absolute_indexed(y))) break;
         comp_val = OP_AND();
         a = comp_val;
         break;
     case 0x3D:
         // AND abs,X
-        if (!(complete = ADDR_ABX())) break;
+        if (!(complete = absolute_indexed(x))) break;
         comp_val = OP_AND();
         a = comp_val;
         break;
     case 0x3E:
         // ROL abs,X
-        if (!(complete = ADDR_ABX(false))) break;
+        if (!(complete = absolute_indexed(x, false))) break;
         comp_val = OP_ROL();
         complete = WB_MEM(comp_val);
         break;
@@ -394,13 +394,13 @@ void CPU::clock_cycle()
         break;
     case 0x55:
         // EOR zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_EOR();
         a = comp_val;
         break;
     case 0x56:
         // LSR zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_LSR();
         complete = WB_MEM(comp_val);
         break;
@@ -411,19 +411,19 @@ void CPU::clock_cycle()
         break;
     case 0x59:
         // EOR abs,Y
-        if (!(complete = ADDR_ABY())) break;
+        if (!(complete = absolute_indexed(y))) break;
         comp_val = OP_EOR();
         a = comp_val;
         break;
     case 0x5D:
         // EOR abs,X
-        if (!(complete = ADDR_ABX())) break;
+        if (!(complete = absolute_indexed(x))) break;
         comp_val = OP_EOR();
         a = comp_val;
         break;
     case 0x5E:
         // LSR abs,X
-        if (!(complete = ADDR_ABX(false))) break;
+        if (!(complete = absolute_indexed(x, false))) break;
         comp_val = OP_LSR();
         complete = WB_MEM(comp_val);
         break;
@@ -498,13 +498,13 @@ void CPU::clock_cycle()
         break;
     case 0x75:
         // ADC zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_ADC();
         a = comp_val;
         break;
     case 0x76:
         // ROR zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_ROR();
         complete = WB_MEM(comp_val);
         break;
@@ -515,19 +515,19 @@ void CPU::clock_cycle()
         break;
     case 0x79:
         // ADC abs,Y
-        if (!(complete = ADDR_ABY())) break;
+        if (!(complete = absolute_indexed(y))) break;
         comp_val = OP_ADC();
         a = comp_val;
         break;
     case 0x7D:
         // ADC abs,X
-        if (!(complete = ADDR_ABX())) break;
+        if (!(complete = absolute_indexed(x))) break;
         comp_val = OP_ADC();
         a = comp_val;
         break;
     case 0x7E:
         // ROR abs,X
-        if (!(complete = ADDR_ABX(false))) break;
+        if (!(complete = absolute_indexed(x, false))) break;
         comp_val = OP_ROR();
         complete = WB_MEM(comp_val);
         break;
@@ -592,17 +592,17 @@ void CPU::clock_cycle()
         break;
     case 0x94:
         // STY zpg,X
-        if (!(complete = ADDR_ZPX_R())) break;
+        if (!(complete = zeropage_indexed(x, false))) break;
         complete = WB_MEM(y, false);
         break;
     case 0x95:
         // STA zpg,X
-        if (!(complete = ADDR_ZPX_R())) break;
+        if (!(complete = zeropage_indexed(x, false))) break;
         complete = WB_MEM(a, false);
         break;
     case 0x96:
         // STX zpg,y
-        if (!(complete = ADDR_ZPY_R())) break;
+        if (!(complete = zeropage_indexed(y, false))) break;
         complete = WB_MEM(x, false);
         break;
     case 0x98:
@@ -613,7 +613,7 @@ void CPU::clock_cycle()
         break;
     case 0x99:
         // STA abs,Y
-        if (!(complete = ADDR_ABY_R(false))) break;
+        if (!(complete = absolute_indexed_noresolve(y, false))) break;
         complete = WB_MEM(a, false);
         break;
     case 0x9A:
@@ -623,7 +623,7 @@ void CPU::clock_cycle()
         break;
     case 0x9D:
         // STA abs,X
-        if (!(complete = ADDR_ABX_R(false))) break;
+        if (!(complete = absolute_indexed_noresolve(x, false))) break;
         complete = WB_MEM(a, false);
         break;
     case 0xA0:
@@ -712,19 +712,19 @@ void CPU::clock_cycle()
         break;
     case 0xB4:
         // LDY zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         OP_FLG(val);
         y = val;
         break;
     case 0xB5:
         // LDA zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         OP_FLG(val);
         a = val;
         break;
     case 0xB6:
         // LDX zpg,Y
-        if (!(complete = ADDR_ZPY())) break;
+        if (!(complete = zeropage_indexed(y))) break;
         OP_FLG(val);
         x = val;
         break;
@@ -735,7 +735,7 @@ void CPU::clock_cycle()
         break;
     case 0xB9:
         // LDA abs,Y
-        if (!(complete = ADDR_ABY())) break;
+        if (!(complete = absolute_indexed(y))) break;
         OP_FLG(val);
         a = val;
         break;
@@ -747,19 +747,19 @@ void CPU::clock_cycle()
         break;
     case 0xBC:
         // LDY abs,X
-        if (!(complete = ADDR_ABX())) break;
+        if (!(complete = absolute_indexed(x))) break;
         OP_FLG(val);
         y = val;
         break;
     case 0xBD:
         // LDA abs,X
-        if (!(complete = ADDR_ABX())) break;
+        if (!(complete = absolute_indexed(x))) break;
         OP_FLG(val);
         a = val;
         break;
     case 0xBE:
         // LDX abs,Y
-        if (!(complete = ADDR_ABY())) break;
+        if (!(complete = absolute_indexed(y))) break;
         OP_FLG(val);
         x = val;
         break;
@@ -837,28 +837,28 @@ void CPU::clock_cycle()
         break;
     case 0xD5:
         // CMP zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_CMP(a);
         break;
     case 0xD6:
         // DEC zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_DEC();
         complete = WB_MEM(comp_val);
         break;
     case 0xD9:
         // CMP abs,Y
-        if (!(complete = ADDR_ABY())) break;
+        if (!(complete = absolute_indexed(y))) break;
         comp_val = OP_CMP(a);
         break;
     case 0xDD:
         // CMP abs,X
-        if (!(complete = ADDR_ABX())) break;
+        if (!(complete = absolute_indexed(x))) break;
         comp_val = OP_CMP(a);
         break;
     case 0xDE:
         // DEC abs,X
-        if (!(complete = ADDR_ABX(false))) break;
+        if (!(complete = absolute_indexed(x, false))) break;
         comp_val = OP_DEC();
         complete = WB_MEM(comp_val);
         break;
@@ -938,31 +938,31 @@ void CPU::clock_cycle()
         break;
     case 0xF5:
         // SBC zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_SBC();
         a = comp_val;
         break;
     case 0xF6:
         // INC zpg,X
-        if (!(complete = ADDR_ZPX())) break;
+        if (!(complete = zeropage_indexed(x))) break;
         comp_val = OP_INC();
         complete = WB_MEM(comp_val);
         break;
     case 0xF9:
         // SBC abs,Y
-        if (!(complete = ADDR_ABY())) break;
+        if (!(complete = absolute_indexed(y))) break;
         comp_val = OP_SBC();
         a = comp_val;
         break;
     case 0xFD:
         // SBC abs,X
-        if (!(complete = ADDR_ABX())) break;
+        if (!(complete = absolute_indexed(x))) break;
         comp_val = OP_SBC();
         a = comp_val;
         break;
     case 0xFE:
         // INC abs,X
-        if (!(complete = ADDR_ABX(false))) break;
+        if (!(complete = absolute_indexed(x, false))) break;
         comp_val = OP_INC();
         complete = WB_MEM(comp_val);
         break;
@@ -1030,7 +1030,7 @@ bool CPU::ADDR_ZP_R()
     return false;
 }
 
-bool CPU::ADDR_ZPX()
+bool CPU::zeropage_indexed(uint8_t index, bool resolve)
 {
     switch (ins_step)
     {
@@ -1039,61 +1039,11 @@ bool CPU::ADDR_ZPX()
         break;
     case 2:
         bus->get(addr);
-        addr = static_cast<uint8_t>(addr + x);
+        addr = static_cast<uint8_t>(addr + index);
+        if (!resolve) return true;
         break;
     case 3:
-        val = bus->get(addr);
-    default:
-        return true;
-    }
-    return false;
-}
-
-bool CPU::ADDR_ZPY()
-{
-    switch (ins_step)
-    {
-    case 1:
-        addr = fetch(true);
-        break;
-    case 2:
-        bus->get(addr);
-        addr = static_cast<uint8_t>(addr + y);
-        break;
-    case 3:
-        val = bus->get(addr);
-    default:
-        return true;
-    }
-    return false;
-}
-
-bool CPU::ADDR_ZPX_R()
-{
-    switch (ins_step)
-    {
-    case 1:
-        addr = fetch(true);
-        break;
-    case 2:
-        bus->get(addr);
-        addr = static_cast<uint8_t>(addr + x);
-    default:
-        return true;
-    }
-    return false;
-}
-
-bool CPU::ADDR_ZPY_R()
-{
-    switch (ins_step)
-    {
-    case 1:
-        addr = fetch(true);
-        break;
-    case 2:
-        bus->get(addr);
-        addr = static_cast<uint8_t>(addr + y);
+        if (resolve) val = bus->get(addr);
     default:
         return true;
     }
@@ -1133,36 +1083,7 @@ bool CPU::ADDR_AB_R()
     return false;
 }
 
-bool CPU::ADDR_ABX(bool optimise)
-{
-    switch (ins_step)
-    {
-    case 1:
-    case 2:
-        buf >>= 8;
-        buf |= fetch(true)<<8;
-        break;
-    case 3:
-        addr = (buf&0xFF00) | static_cast<uint8_t>(buf+x);
-        val = bus->get(addr);
-        if ((uint8_t)(buf + x) >= x && optimise)
-        {
-            return true;
-        }
-        break;
-    case 4:
-        if ((uint8_t)(buf + x) < x || !optimise)
-        {
-            addr = buf + x;
-            val = bus->get(addr);
-        }
-    default:
-        return true;
-    }
-    return false;
-}
-
-bool CPU::ADDR_ABX_R(bool optimise)
+bool CPU::absolute_indexed_noresolve(uint8_t index, bool optimise)
 {
     switch (ins_step)
     {
@@ -1171,17 +1092,17 @@ bool CPU::ADDR_ABX_R(bool optimise)
         break;
     case 2:
         addr |= fetch(true)<<8;
-        if ((uint8_t)(addr + x) >= x && optimise)
+        if ((uint8_t)(addr + index) >= index && optimise)
         {
-            addr += x;
+            addr += index;
             return true;
         }
         break;
     case 3:
-        if ((uint8_t)(addr + x) < x || !optimise)
+        if ((uint8_t)(addr + index) < index || !optimise)
         {
-            bus->get(addr&0xFF00 | static_cast<uint8_t>(addr+x));
-            addr += x;
+            bus->get(addr&0xFF00 | static_cast<uint8_t>(addr+index));
+            addr += index;
         }
     default:
         return true;
@@ -1189,7 +1110,7 @@ bool CPU::ADDR_ABX_R(bool optimise)
     return false;
 }
 
-bool CPU::ADDR_ABY()
+bool CPU::absolute_indexed(uint8_t index, bool optimise)
 {
     switch (ins_step)
     {
@@ -1199,17 +1120,17 @@ bool CPU::ADDR_ABY()
         buf |= fetch(true)<<8;
         break;
     case 3:
-        addr = (buf&0xFF00) | static_cast<uint8_t>(buf+y);
+        addr = (buf&0xFF00) | static_cast<uint8_t>(buf+index);
         val = bus->get(addr);
-        if (static_cast<uint8_t>(buf + y) >= y)
+        if (static_cast<uint8_t>(buf + index) >= index && optimise)
         {
             return true;
         }
         break;
     case 4:
-        if (static_cast<uint8_t>(buf + y) < y)
+        if (static_cast<uint8_t>(buf + index) < index || !optimise)
         {
-            addr = buf + y;
+            addr = buf + index;
             val = bus->get(addr);
         }
     default:
@@ -1218,29 +1139,17 @@ bool CPU::ADDR_ABY()
     return false;
 }
 
-bool CPU::ADDR_ABY_R(bool optimise)
+bool CPU::absolute_indexed(uint8_t index, bool resolve, bool optimise)
 {
     switch (ins_step)
     {
     case 1:
-        buf = fetch(true);
+        addr = fetch(true);
         break;
     case 2:
-        buf |= fetch(true)<<8;
-        addr = (buf&0xFF00) | static_cast<uint8_t>(buf+y);
-        if ((uint8_t)(buf + y) >= y && optimise)
-        {
-            return true;
-        }
+        addr |= fetch(true)<<8;
+        if (!resolve && optimise) {}
         break;
-    case 3:
-        if ((uint8_t)(buf + y) < y || !optimise)
-        {
-            bus->get(addr);
-            addr = buf + y;
-        }
-    default:
-        return true;
     }
     return false;
 }
@@ -1290,28 +1199,6 @@ bool CPU::ADDR_IN_R()
     return false;
 }
 
-bool CPU::ADDR_INX_R()
-{
-    switch (ins_step)
-    {
-    case 1:
-        buf = fetch(true);
-        break;
-    case 2:
-        bus->get(buf);
-        buf = static_cast<uint8_t>(buf + x);
-        break;
-    case 3:
-        addr = bus->get(buf);
-        break;
-    case 4:
-        addr |= bus->get(static_cast<uint8_t>(buf+1))<<8;
-    default:
-        return true;
-    }
-    return false;
-}
-
 bool CPU::ADDR_INY()
 {
     switch (ins_step)
@@ -1335,6 +1222,28 @@ bool CPU::ADDR_INY()
             addr = buf + y;
             val = bus->get(addr);
         }
+    default:
+        return true;
+    }
+    return false;
+}
+
+bool CPU::ADDR_INX_R()
+{
+    switch (ins_step)
+    {
+    case 1:
+        buf = fetch(true);
+        break;
+    case 2:
+        bus->get(buf);
+        buf = static_cast<uint8_t>(buf + x);
+        break;
+    case 3:
+        addr = bus->get(buf);
+        break;
+    case 4:
+        addr |= bus->get(static_cast<uint8_t>(buf+1))<<8;
     default:
         return true;
     }

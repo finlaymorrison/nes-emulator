@@ -44,22 +44,17 @@ private:
     bool ADDR_IMP(); // Implied
     bool ADDR_IM(); // Immediate
     bool ADDR_ZP(); // Zero-Page
-    bool ADDR_ZPX(); // Zero-Page X
-    bool ADDR_ZPY(); // Zero-Page Y
     bool ADDR_AB(); // Absolute
-    bool ADDR_ABX(bool optimise=true); // Absolute X
-    bool ADDR_ABY(); // Absolute Y
     bool ADDR_INX(); // Index X
     bool ADDR_INY(); // Index Y
     bool ADDR_REL(); // PC Relative
+    bool zeropage_indexed(uint8_t index, bool resolve=true);
+    bool absolute_indexed(uint8_t index, bool optimise=true);
+    bool absolute_indexed_noresolve(uint8_t index, bool optimise=true);
 
     bool ADDR_ZP_R();
-    bool ADDR_ZPX_R();
-    bool ADDR_ZPY_R();
     bool ADDR_AB_R();
     bool ADDR_ABP_R();
-    bool ADDR_ABX_R(bool optimise=true);
-    bool ADDR_ABY_R(bool optimise=true);
     bool ADDR_IN_R();
     bool ADDR_INX_R();
     bool ADDR_INY_R(bool optimise=true);
