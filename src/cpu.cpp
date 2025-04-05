@@ -32,7 +32,7 @@ void CPU::attach_bus(Bus *new_bus)
 
 bool CPU::mid_instruction()
 {
-    return ins_step != 0;
+    return ins_step >= 0;
 }
 
 bool CPU::verify_state(nlohmann::json json)
@@ -99,10 +99,10 @@ bool CPU::WB_MEM(uint8_t comp_val, bool delay)
 
 void CPU::clock_cycle()
 {
+    ++ins_step;
     if (ins_step == 0)
     {
         opcode = fetch(true);
-        ++ins_step;
         last_p = p;
         addr = 0;
         buf = 0;
@@ -111,29 +111,21 @@ void CPU::clock_cycle()
         return;
     }
 
-    int comp_val = 0;
-    bool complete = true;
     switch (opcode)
     {
-    case 0x00:
-        // BRK impl
-        if (!(complete = ADDR_IMP())) break;
-        complete = WB_BRK();
+    case 0x00: // BRK impl
+        if (!ADDR_IMP()) return;
+        if (!WB_BRK()) return;;
         break;
-    case 0x01:
-        // ORA X,ind
-        if (!(complete = ADDR_INX())) break;
-        comp_val = OP_ORA();
-        a = comp_val;
+    case 0x01: // ORA X,ind
+        if (!ADDR_INX()) break;
+        a = OP_ORA();
         break;
-    case 0x05:
-        // ORA zpg
-        if (!(complete = ADDR_ZP())) break;
-        comp_val = OP_ORA();
-        a = comp_val;
+    case 0x05: // ORA zpg
+        if (!ADDR_ZP()) break;
+        a = OP_ORA();
         break;
-    case 0x06:
-        // ASL zpg
+    case 0x06: // ASL zpg
         if (!(complete = ADDR_ZP())) break;
         comp_val = OP_ASL();
         complete = WB_MEM(comp_val);
@@ -198,19 +190,19 @@ void CPU::clock_cycle()
         break;
     case 0x19:
         // ORA abs,Y
-        if (!(complete = absolute_indexed(y))) break;
+        if (!(complete = absolute_indexed(y, true))) break;
         comp_val = OP_ORA();
         a = comp_val;
         break;
     case 0x1D:
         // ORA abs,X
-        if (!(complete = absolute_indexed(x))) break;
+        if (!(complete = absolute_indexed(x, true))) break;
         comp_val = OP_ORA();
         a = comp_val;
         break;
     case 0x1E:
         // ASL abs,X
-        if (!(complete = absolute_indexed(x, false))) break;
+        if (!(complete = absolute_indexed(x, true, false))) break;
         comp_val = OP_ASL();
         complete = WB_MEM(comp_val);
         break;
@@ -307,19 +299,19 @@ void CPU::clock_cycle()
         break;
     case 0x39:
         // AND abs,Y
-        if (!(complete = absolute_indexed(y))) break;
+        if (!(complete = absolute_indexed(y, true))) break;
         comp_val = OP_AND();
         a = comp_val;
         break;
     case 0x3D:
         // AND abs,X
-        if (!(complete = absolute_indexed(x))) break;
+        if (!(complete = absolute_indexed(x, true))) break;
         comp_val = OP_AND();
         a = comp_val;
         break;
     case 0x3E:
         // ROL abs,X
-        if (!(complete = absolute_indexed(x, false))) break;
+        if (!(complete = absolute_indexed(x, true, false))) break;
         comp_val = OP_ROL();
         complete = WB_MEM(comp_val);
         break;
@@ -411,19 +403,19 @@ void CPU::clock_cycle()
         break;
     case 0x59:
         // EOR abs,Y
-        if (!(complete = absolute_indexed(y))) break;
+        if (!(complete = absolute_indexed(y, true))) break;
         comp_val = OP_EOR();
         a = comp_val;
         break;
     case 0x5D:
         // EOR abs,X
-        if (!(complete = absolute_indexed(x))) break;
+        if (!(complete = absolute_indexed(x, true))) break;
         comp_val = OP_EOR();
         a = comp_val;
         break;
     case 0x5E:
         // LSR abs,X
-        if (!(complete = absolute_indexed(x, false))) break;
+        if (!(complete = absolute_indexed(x, true, false))) break;
         comp_val = OP_LSR();
         complete = WB_MEM(comp_val);
         break;
@@ -515,19 +507,19 @@ void CPU::clock_cycle()
         break;
     case 0x79:
         // ADC abs,Y
-        if (!(complete = absolute_indexed(y))) break;
+        if (!(complete = absolute_indexed(y, true))) break;
         comp_val = OP_ADC();
         a = comp_val;
         break;
     case 0x7D:
         // ADC abs,X
-        if (!(complete = absolute_indexed(x))) break;
+        if (!(complete = absolute_indexed(x, true))) break;
         comp_val = OP_ADC();
         a = comp_val;
         break;
     case 0x7E:
         // ROR abs,X
-        if (!(complete = absolute_indexed(x, false))) break;
+        if (!(complete = absolute_indexed(x, true, false))) break;
         comp_val = OP_ROR();
         complete = WB_MEM(comp_val);
         break;
@@ -613,7 +605,7 @@ void CPU::clock_cycle()
         break;
     case 0x99:
         // STA abs,Y
-        if (!(complete = absolute_indexed_noresolve(y, false))) break;
+        if (!(complete = absolute_indexed(y, false, false))) break;
         complete = WB_MEM(a, false);
         break;
     case 0x9A:
@@ -623,7 +615,7 @@ void CPU::clock_cycle()
         break;
     case 0x9D:
         // STA abs,X
-        if (!(complete = absolute_indexed_noresolve(x, false))) break;
+        if (!(complete = absolute_indexed(x, false, false))) break;
         complete = WB_MEM(a, false);
         break;
     case 0xA0:
@@ -735,7 +727,7 @@ void CPU::clock_cycle()
         break;
     case 0xB9:
         // LDA abs,Y
-        if (!(complete = absolute_indexed(y))) break;
+        if (!(complete = absolute_indexed(y, true))) break;
         OP_FLG(val);
         a = val;
         break;
@@ -747,19 +739,19 @@ void CPU::clock_cycle()
         break;
     case 0xBC:
         // LDY abs,X
-        if (!(complete = absolute_indexed(x))) break;
+        if (!(complete = absolute_indexed(x, true))) break;
         OP_FLG(val);
         y = val;
         break;
     case 0xBD:
         // LDA abs,X
-        if (!(complete = absolute_indexed(x))) break;
+        if (!(complete = absolute_indexed(x, true))) break;
         OP_FLG(val);
         a = val;
         break;
     case 0xBE:
         // LDX abs,Y
-        if (!(complete = absolute_indexed(y))) break;
+        if (!(complete = absolute_indexed(y, true))) break;
         OP_FLG(val);
         x = val;
         break;
@@ -848,17 +840,17 @@ void CPU::clock_cycle()
         break;
     case 0xD9:
         // CMP abs,Y
-        if (!(complete = absolute_indexed(y))) break;
+        if (!(complete = absolute_indexed(y, true))) break;
         comp_val = OP_CMP(a);
         break;
     case 0xDD:
         // CMP abs,X
-        if (!(complete = absolute_indexed(x))) break;
+        if (!(complete = absolute_indexed(x, true))) break;
         comp_val = OP_CMP(a);
         break;
     case 0xDE:
         // DEC abs,X
-        if (!(complete = absolute_indexed(x, false))) break;
+        if (!(complete = absolute_indexed(x, true, false))) break;
         comp_val = OP_DEC();
         complete = WB_MEM(comp_val);
         break;
@@ -950,19 +942,19 @@ void CPU::clock_cycle()
         break;
     case 0xF9:
         // SBC abs,Y
-        if (!(complete = absolute_indexed(y))) break;
+        if (!(complete = absolute_indexed(y, true))) break;
         comp_val = OP_SBC();
         a = comp_val;
         break;
     case 0xFD:
         // SBC abs,X
-        if (!(complete = absolute_indexed(x))) break;
+        if (!(complete = absolute_indexed(x, true))) break;
         comp_val = OP_SBC();
         a = comp_val;
         break;
     case 0xFE:
         // INC abs,X
-        if (!(complete = absolute_indexed(x, false))) break;
+        if (!(complete = absolute_indexed(x, true, false))) break;
         comp_val = OP_INC();
         complete = WB_MEM(comp_val);
         break;
@@ -970,12 +962,7 @@ void CPU::clock_cycle()
         complete = true;
     }
 
-    if (!complete)
-    {
-        ++ins_step;
-        return;
-    }
-    ins_step = 0;
+    ins_step = -1;
 }
 
 bool CPU::ADDR_IMP()
@@ -1083,73 +1070,59 @@ bool CPU::ADDR_AB_R()
     return false;
 }
 
-bool CPU::absolute_indexed_noresolve(uint8_t index, bool optimise)
-{
-    switch (ins_step)
-    {
-    case 1:
-        addr = fetch(true);
-        break;
-    case 2:
-        addr |= fetch(true)<<8;
-        if ((uint8_t)(addr + index) >= index && optimise)
-        {
-            addr += index;
-            return true;
-        }
-        break;
-    case 3:
-        if ((uint8_t)(addr + index) < index || !optimise)
-        {
-            bus->get(addr&0xFF00 | static_cast<uint8_t>(addr+index));
-            addr += index;
-        }
-    default:
-        return true;
-    }
-    return false;
-}
-
-bool CPU::absolute_indexed(uint8_t index, bool optimise)
-{
-    switch (ins_step)
-    {
-    case 1:
-    case 2:
-        buf >>= 8;
-        buf |= fetch(true)<<8;
-        break;
-    case 3:
-        addr = (buf&0xFF00) | static_cast<uint8_t>(buf+index);
-        val = bus->get(addr);
-        if (static_cast<uint8_t>(buf + index) >= index && optimise)
-        {
-            return true;
-        }
-        break;
-    case 4:
-        if (static_cast<uint8_t>(buf + index) < index || !optimise)
-        {
-            addr = buf + index;
-            val = bus->get(addr);
-        }
-    default:
-        return true;
-    }
-    return false;
-}
-
 bool CPU::absolute_indexed(uint8_t index, bool resolve, bool optimise)
 {
     switch (ins_step)
     {
     case 1:
-        addr = fetch(true);
+        buf = fetch(true);
         break;
     case 2:
-        addr |= fetch(true)<<8;
-        if (!resolve && optimise) {}
+        buf |= fetch(true)<<8;
+        if (!resolve)
+        {
+            if ((uint8_t)(buf + index) >= index && optimise)
+            {
+                addr = buf + index;
+                return true;
+            }
+        }
         break;
+    case 3:
+        addr = buf&0xFF00 | static_cast<uint8_t>(buf+index);
+        if (!resolve)
+        {
+            if ((uint8_t)(buf + index) < index || !optimise)
+            {
+                bus->get(addr);
+                addr = buf + index;
+                return true;
+            }
+        }
+        else
+        {
+            val = bus->get(addr);
+            if (static_cast<uint8_t>(buf + index) >= index && optimise)
+            {
+                return true;
+            }
+        }
+        break;
+    case 4:
+        if (!resolve)
+        {
+            return true;
+        }
+        else
+        {
+            if (static_cast<uint8_t>(buf + index) < index || !optimise)
+            {
+                addr = buf + index;
+                val = bus->get(addr);
+            }
+        }
+    default:
+        return true;
     }
     return false;
 }

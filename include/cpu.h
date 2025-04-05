@@ -49,8 +49,7 @@ private:
     bool ADDR_INY(); // Index Y
     bool ADDR_REL(); // PC Relative
     bool zeropage_indexed(uint8_t index, bool resolve=true);
-    bool absolute_indexed(uint8_t index, bool optimise=true);
-    bool absolute_indexed_noresolve(uint8_t index, bool optimise=true);
+    bool absolute_indexed(uint8_t index, bool resolve=true, bool optimise=true);
 
     bool ADDR_ZP_R();
     bool ADDR_AB_R();
