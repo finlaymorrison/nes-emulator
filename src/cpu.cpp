@@ -194,7 +194,7 @@ void CPU::clock_cycle()
     case 0x18:
         // CLC impl
         if (!(complete = ADDR_IMP())) break;
-        complete = clear_flag(FLG_CRY);
+        clear_flag(FLG_CRY);
         break;
     case 0x19:
         // ORA abs,Y
@@ -303,7 +303,7 @@ void CPU::clock_cycle()
     case 0x38:
         // SEC impl
         if (!(complete = ADDR_IMP())) break;
-        complete = set_flag(FLG_CRY);
+        set_flag(FLG_CRY);
         break;
     case 0x39:
         // AND abs,Y
@@ -407,7 +407,7 @@ void CPU::clock_cycle()
     case 0x58:
         // CLI impl
         if (!(complete = ADDR_IMP())) break;
-        complete = clear_flag(FLG_INT);
+        clear_flag(FLG_INT);
         break;
     case 0x59:
         // EOR abs,Y
@@ -511,7 +511,7 @@ void CPU::clock_cycle()
     case 0x78:
         // SEI impl
         if (!(complete = ADDR_IMP())) break;
-        complete = set_flag(FLG_INT);
+        set_flag(FLG_INT);
         break;
     case 0x79:
         // ADC abs,Y
@@ -731,7 +731,7 @@ void CPU::clock_cycle()
     case 0xB8:
         // CLV impl
         if (!(complete = ADDR_IMP())) break;
-        complete = clear_flag(FLG_OVR);
+        clear_flag(FLG_OVR);
         break;
     case 0xB9:
         // LDA abs,Y
@@ -1396,9 +1396,8 @@ uint8_t CPU::OP_ORA()
 {
     uint8_t result = a | val;
 
-    p = p & ~(FLG_ZRO | FLG_NEG);
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
 
     return result;
 }
@@ -1407,9 +1406,8 @@ uint8_t CPU::OP_AND()
 {
     uint8_t result = a & val;
 
-    p = p & ~(FLG_ZRO | FLG_NEG);
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
 
     return result;
 }
@@ -1418,34 +1416,32 @@ uint8_t CPU::OP_EOR()
 {
     uint8_t result = a ^ val;
 
-    p = p & ~(FLG_ZRO | FLG_NEG);
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
 
     return result;
 }
 
 uint8_t CPU::OP_ASL()
 {
-    p = p & ~(FLG_ZRO | FLG_NEG | FLG_CRY);
-    p |= (val & 0x80) ? FLG_CRY : 0;
+    update_flag(FLG_CRY, val & 0x80);
 
     uint8_t result = val << 1;
 
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
 
     return result;
 }
 
 uint8_t CPU::OP_LSR()
 {
-    p = p & ~(FLG_NEG | FLG_CRY | FLG_ZRO);
-    p |= (val & 0x01) ? FLG_CRY : 0;
+    update_flag(FLG_CRY, val & 0x1);
 
     uint8_t result = val >> 1;
 
-    p |= (result == 0) ? FLG_ZRO : 0;
+    update_flag(FLG_ZRO, result == 0);
+    clear_flag(FLG_NEG);
 
     return result;
 }
@@ -1456,10 +1452,9 @@ uint8_t CPU::OP_ROL()
     uint8_t result = val << 1;
     result |= (last_p & FLG_CRY) ? 1 : 0;
 
-    p = p & ~(FLG_ZRO | FLG_NEG | FLG_CRY);
-    p |= (val & 0x80) ? FLG_CRY : 0;
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
+    update_flag(FLG_CRY, val & 0x80);
 
     return result;
 }
@@ -1470,10 +1465,9 @@ uint8_t CPU::OP_ROR()
     uint8_t result = val >> 1;
     result |= (last_p & FLG_CRY) ? (0x80) : 0;
 
-    p = p & ~(FLG_ZRO | FLG_NEG | FLG_CRY);
-    p |= (val & 1) ? FLG_CRY : 0;
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
+    update_flag(FLG_CRY, val & 0x1);
 
     return result;
 }
@@ -1483,11 +1477,10 @@ uint8_t CPU::OP_ADC()
     uint8_t carry = (FLG_CRY&last_p) ? 1 : 0;
     uint8_t result = a + val + carry;
 
-    p = p & ~(FLG_ZRO | FLG_NEG | FLG_CRY | FLG_OVR);
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & 0x80) ? FLG_NEG : 0;
-    p |= (result-carry < a) ? FLG_CRY : 0;
-    p |= ((val ^ result) & (result ^ a))&0x80 ? FLG_OVR : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
+    update_flag(FLG_CRY, result-carry < a);
+    update_flag(FLG_OVR, ((val ^ result) & (result ^ a))&0x80);
 
     return result;
 }
@@ -1498,11 +1491,10 @@ uint8_t CPU::OP_SBC()
     uint8_t borrow = (FLG_CRY&last_p) ? 1 : 0;
     uint8_t result = a + val_comp + borrow;
 
-    p = p & ~(FLG_ZRO | FLG_NEG | FLG_CRY | FLG_OVR);
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & 0x80) ? FLG_NEG : 0;
-    p |= (result-borrow < a) ? FLG_CRY : 0;
-    p |= ((val_comp ^ result) & (result ^ a))&0x80 ? FLG_OVR : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
+    update_flag(FLG_CRY, result-borrow < a);
+    update_flag(FLG_OVR, ((val_comp ^ result) & (result ^ a))&0x80);
 
     return result;
 }
@@ -1511,9 +1503,8 @@ uint8_t CPU::OP_DEC()
 {
     uint8_t result = val - 1;
 
-    p = p & ~(FLG_ZRO | FLG_NEG);
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
 
     return result;
 }
@@ -1522,19 +1513,17 @@ uint8_t CPU::OP_INC()
 {
     uint8_t result = val + 1;
 
-    p = p & ~(FLG_ZRO | FLG_NEG);
-    p |= (result == 0) ? FLG_ZRO : 0;
-    p |= (result & (1 << 7)) ? FLG_NEG : 0;
+    update_flag(FLG_NEG, result & 0x80);
+    update_flag(FLG_ZRO, result == 0);
 
     return result;
 }
 
 uint8_t CPU::OP_TST()
 {
-    p &= ~(FLG_NEG|FLG_OVR|FLG_ZRO);
-    p |= (val&0x80) ? FLG_NEG : 0;
-    p |= (val&0x40) ? FLG_OVR : 0;
-    p |= ((a&val) == 0) ? FLG_ZRO : 0;
+    update_flag(FLG_NEG, val & 0x80);
+    update_flag(FLG_OVR, val & 0x40);
+    update_flag(FLG_ZRO, (a & val) == 0);
 
     return 0;
 }
@@ -1543,10 +1532,9 @@ uint8_t CPU::OP_CMP(uint8_t cmpval)
 {
     uint8_t res = cmpval - val;
 
-    p &= ~(FLG_NEG|FLG_CRY|FLG_ZRO);
-    p |= (res==0) ? FLG_ZRO : 0;
-    p |= (res&0x80) ? FLG_NEG : 0;
-    p |= (res <= cmpval) ? FLG_CRY : 0;
+    update_flag(FLG_ZRO, res == 0);
+    update_flag(FLG_NEG, res & 0x80);
+    update_flag(FLG_CRY, res <= cmpval);
 
     return 0;
 }
@@ -1739,19 +1727,21 @@ bool CPU::WB_RTS()
 
 void CPU::OP_FLG(uint8_t flgval)
 {
-    p &= ~(FLG_NEG|FLG_ZRO);
-    p |= (flgval==0) ? FLG_ZRO : 0;
-    p |= (flgval&0x80) ? FLG_NEG : 0;
+    update_flag(FLG_ZRO, flgval == 0);
+    update_flag(FLG_NEG, flgval & 0x80);
 }
 
-bool CPU::set_flag(uint8_t flag)
+void CPU::update_flag(uint8_t flag, bool condition)
+{
+    p = (p & ~flag) | (-static_cast<int>(condition) & flag);
+}
+
+void CPU::set_flag(uint8_t flag)
 {
     p |= flag;
-    return true;
 }
 
-bool CPU::clear_flag(uint8_t flag)
+void CPU::clear_flag(uint8_t flag)
 {
     p &= ~flag;
-    return true;
 }

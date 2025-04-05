@@ -37,8 +37,9 @@ private:
 
     uint8_t fetch(bool inc);
     
-    bool set_flag(uint8_t flag);
-    bool clear_flag(uint8_t flag);
+    void update_flag(uint8_t flag, bool condition);
+    void set_flag(uint8_t flag);
+    void clear_flag(uint8_t flag);
 
     bool ADDR_IMP(); // Implied
     bool ADDR_IM(); // Immediate
