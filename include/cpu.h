@@ -7,6 +7,32 @@
 
 class Bus;
 
+struct StatusRegister
+{
+    union
+    {
+        uint8_t value;
+        struct
+        {
+            bool carry : 1;
+            bool zero : 1;
+            bool interrupt : 1;
+            bool _unused0 : 1;
+            bool brk : 1;
+            bool _unused1 : 1;
+            bool overflow : 1;
+            bool negative : 1;
+        } flags;
+    };
+
+    uint8_t get_break_val() const
+    {
+        StatusRegister temp = *this;
+        temp.flags.brk = true;
+        return temp.value;
+    }
+};
+
 class CPU
 {
 private:
@@ -15,10 +41,12 @@ private:
     uint8_t x;
     uint8_t y;
     uint8_t s;
-    uint8_t p;
+    StatusRegister p;
 
     Bus *bus;
     int ins_step;
+
+    
 public:
     CPU();
     void load_json(nlohmann::json json);
@@ -28,7 +56,7 @@ public:
     void attach_bus(Bus *new_bus);
     bool mid_instruction();
 private:
-    uint8_t last_p; // I hate this
+    StatusRegister last_p; // I hate this
     uint8_t opcode;
     uint16_t addr; // Effective address
     uint16_t buf; // Buffer value
@@ -36,10 +64,6 @@ private:
     int wb_cycle;
 
     uint8_t fetch(bool inc);
-    
-    void update_flag(uint8_t flag, bool condition);
-    void set_flag(uint8_t flag);
-    void clear_flag(uint8_t flag);
 
     bool ADDR_IMP(); // Implied
     bool ADDR_IM(); // Immediate
@@ -69,9 +93,9 @@ private:
     uint8_t OP_ROR();
     uint8_t OP_DEC();
     uint8_t OP_INC();
-    uint8_t OP_TST();
+    void OP_TST();
     void OP_FLG(uint8_t flgval);
-    uint8_t OP_CMP(uint8_t cmpval);
+    void OP_CMP(uint8_t cmpval);
 
     bool WB_MEM(uint8_t comp_val, bool delay=true);
     

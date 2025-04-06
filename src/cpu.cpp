@@ -4,13 +4,6 @@
 #include <iostream>
 #include <iomanip>
 
-#define FLG_NEG 0b10000000
-#define FLG_OVR 0b01000000
-#define FLG_BRK 0b00010000
-#define FLG_INT 0b00000100
-#define FLG_ZRO 0b00000010
-#define FLG_CRY 0b00000001
-
 CPU::CPU() :
     pc{}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_step{-1}, last_p{}
 {}
@@ -22,7 +15,7 @@ void CPU::load_json(nlohmann::json json)
     x = json["x"].get<uint8_t>();
     y = json["y"].get<uint8_t>();
     s = json["s"].get<uint8_t>();
-    p = json["p"].get<uint8_t>();
+    p.value = json["p"].get<uint8_t>();
 }
 
 void CPU::attach_bus(Bus *new_bus)
@@ -42,7 +35,7 @@ bool CPU::verify_state(nlohmann::json json)
            json["x"] == x &&
            json["y"] == y &&
            json["s"] == s &&
-           json["p"] == p;
+           json["p"] == p.value;
 }
 
 void CPU::analyse_state(nlohmann::json json)
@@ -68,8 +61,8 @@ void CPU::analyse_state(nlohmann::json json)
         std::cerr << "State mismatch in S: Expected " << json["s"] << ", got " << (int)s << std::endl;
     }
 
-    if (json["p"] != p) {
-        std::cerr << "State mismatch in P: Expected " << json["p"] << ", got " << (int)p << std::endl;
+    if (json["p"] != p.value) {
+        std::cerr << "State mismatch in P: Expected " << json["p"] << ", got " << (int)p.value << std::endl;
     }
 }
 
@@ -151,7 +144,7 @@ void CPU::clock_cycle()
         break;
     case 0x10: // BPL rel
         if (!ADDR_REL()) return;
-        if (FLG_NEG & p) break;
+        if (p.flags.negative) break;
         if (!BRANCH()) return;
         break;
     case 0x11: // ORA ind,y
@@ -168,7 +161,7 @@ void CPU::clock_cycle()
         break;
     case 0x18: // CLC impl
         if (!ADDR_IMP()) return;
-        clear_flag(FLG_CRY);
+        p.flags.carry = false;
         break;
     case 0x19: // ORA abs,Y
         if (!absolute_indexed(y, true)) return;
@@ -228,7 +221,7 @@ void CPU::clock_cycle()
         break;
     case 0x30: // BMI rel
         if (!ADDR_REL()) return;
-        if (!(FLG_NEG & p)) break;
+        if (!p.flags.negative) break;
         if (!BRANCH()) return;
         break;
     case 0x31: // AND ind,Y
@@ -245,7 +238,7 @@ void CPU::clock_cycle()
         break;
     case 0x38: // SEC impl
         if (!ADDR_IMP()) return;
-        set_flag(FLG_CRY);
+        p.flags.carry = true;
         break;
     case 0x39: // AND abs,Y
         if (!absolute_indexed(y, true)) return;
@@ -301,7 +294,7 @@ void CPU::clock_cycle()
         break;
     case 0x50: // BVC rel
         if (!ADDR_REL()) return;
-        if (FLG_OVR & p) break;
+        if (p.flags.overflow) break;
         if (!BRANCH()) return;
         break;
     case 0x51: // EOR ind,Y
@@ -318,7 +311,7 @@ void CPU::clock_cycle()
         break;
     case 0x58: // CLI impl
         if (!ADDR_IMP()) return;
-        clear_flag(FLG_INT);
+        p.flags.interrupt = false;
         break;
     case 0x59: // EOR abs,Y
         if (!absolute_indexed(y, true)) return;
@@ -374,7 +367,7 @@ void CPU::clock_cycle()
         break;
     case 0x70: // BVS rel
         if (!ADDR_REL()) return;
-        if (!(FLG_OVR & p)) break;
+        if (!p.flags.overflow) break;
         if (!BRANCH()) return;
         break;
     case 0x71: // ADC ind,Y
@@ -391,7 +384,7 @@ void CPU::clock_cycle()
         break;
     case 0x78: // SEI impl
         if (!ADDR_IMP()) return;
-        set_flag(FLG_INT);
+        p.flags.interrupt = true;
         break;
     case 0x79: // ADC abs,Y
         if (!absolute_indexed(y, true)) return;
@@ -445,7 +438,7 @@ void CPU::clock_cycle()
         break;
     case 0x90: // BCC rel
         if (!ADDR_REL()) return;
-        if (FLG_CRY & p) break;
+        if (p.flags.carry) break;
         if (!BRANCH()) return;
         break;
     case 0x91: // STA ind,Y
@@ -543,7 +536,7 @@ void CPU::clock_cycle()
         break;
     case 0xB0: // BCS rel
         if (!ADDR_REL()) return;
-        if (!(FLG_CRY & p)) break;
+        if (!p.flags.carry) break;
         if (!BRANCH()) return;
         break;
     case 0xB1: // LDA ind,Y
@@ -568,7 +561,7 @@ void CPU::clock_cycle()
         break;
     case 0xB8: // CLV impl
         if (!ADDR_IMP()) return;
-        clear_flag(FLG_OVR);
+        p.flags.overflow = false;
         break;
     case 0xB9: // LDA abs,Y
         if (!absolute_indexed(y, true)) return;
@@ -643,7 +636,7 @@ void CPU::clock_cycle()
         break;
     case 0xD0: // BNE rel
         if (!ADDR_REL()) return;
-        if (FLG_ZRO & p) break;
+        if (p.flags.zero) break;
         if (!BRANCH()) return;
         break;
     case 0xD1: // CMP ind,Y
@@ -716,7 +709,7 @@ void CPU::clock_cycle()
         break;
     case 0xF0: // BEQ rel
         if (!ADDR_REL()) return;
-        if (!(FLG_ZRO & p)) break;
+        if (!p.flags.zero) break;
         if (!BRANCH()) return;
         break;
     case 0xF1: // SBC ind,Y
@@ -1063,8 +1056,8 @@ uint8_t CPU::OP_ORA()
 {
     uint8_t result = a | val;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
 
     return result;
 }
@@ -1073,8 +1066,8 @@ uint8_t CPU::OP_AND()
 {
     uint8_t result = a & val;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
 
     return result;
 }
@@ -1083,32 +1076,32 @@ uint8_t CPU::OP_EOR()
 {
     uint8_t result = a ^ val;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
 
     return result;
 }
 
 uint8_t CPU::OP_ASL()
 {
-    update_flag(FLG_CRY, val & 0x80);
+    p.flags.carry = val & 0x80;
 
     uint8_t result = val << 1;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
 
     return result;
 }
 
 uint8_t CPU::OP_LSR()
 {
-    update_flag(FLG_CRY, val & 0x1);
+    p.flags.carry = val & 0x1;
 
     uint8_t result = val >> 1;
 
-    update_flag(FLG_ZRO, result == 0);
-    clear_flag(FLG_NEG);
+    p.flags.zero = result == 0;
+    p.flags.negative = false;
 
     return result;
 }
@@ -1117,11 +1110,11 @@ uint8_t CPU::OP_ROL()
 {
 
     uint8_t result = val << 1;
-    result |= (last_p & FLG_CRY) ? 1 : 0;
+    result |= (last_p.flags.carry) ? 1 : 0;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
-    update_flag(FLG_CRY, val & 0x80);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
+    p.flags.carry = val & 0x80;
 
     return result;
 }
@@ -1130,24 +1123,24 @@ uint8_t CPU::OP_ROR()
 {
 
     uint8_t result = val >> 1;
-    result |= (last_p & FLG_CRY) ? (0x80) : 0;
+    result |= (last_p.flags.carry) ? (0x80) : 0;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
-    update_flag(FLG_CRY, val & 0x1);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
+    p.flags.carry = val & 0x1;
 
     return result;
 }
 
 uint8_t CPU::OP_ADC()
 {
-    uint8_t carry = (FLG_CRY&last_p) ? 1 : 0;
+    uint8_t carry = (last_p.flags.carry) ? 1 : 0;
     uint8_t result = a + val + carry;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
-    update_flag(FLG_CRY, result-carry < a);
-    update_flag(FLG_OVR, ((val ^ result) & (result ^ a))&0x80);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
+    p.flags.carry = result-carry < a;
+    p.flags.overflow = ((val ^ result) & (result ^ a))&0x80;
 
     return result;
 }
@@ -1155,13 +1148,13 @@ uint8_t CPU::OP_ADC()
 uint8_t CPU::OP_SBC()
 {
     uint8_t val_comp = ~val;
-    uint8_t borrow = (FLG_CRY&last_p) ? 1 : 0;
+    uint8_t borrow = (last_p.flags.carry) ? 1 : 0;
     uint8_t result = a + val_comp + borrow;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
-    update_flag(FLG_CRY, result-borrow < a);
-    update_flag(FLG_OVR, ((val_comp ^ result) & (result ^ a))&0x80);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
+    p.flags.carry = result-borrow < a;
+    p.flags.overflow = ((val_comp ^ result) & (result ^ a))&0x80;
 
     return result;
 }
@@ -1170,8 +1163,8 @@ uint8_t CPU::OP_DEC()
 {
     uint8_t result = val - 1;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
 
     return result;
 }
@@ -1180,30 +1173,32 @@ uint8_t CPU::OP_INC()
 {
     uint8_t result = val + 1;
 
-    update_flag(FLG_NEG, result & 0x80);
-    update_flag(FLG_ZRO, result == 0);
+    p.flags.negative = result & 0x80;
+    p.flags.zero = result == 0;
 
     return result;
 }
 
-uint8_t CPU::OP_TST()
+void CPU::OP_TST()
 {
-    update_flag(FLG_NEG, val & 0x80);
-    update_flag(FLG_OVR, val & 0x40);
-    update_flag(FLG_ZRO, (a & val) == 0);
-
-    return 0;
+    p.flags.negative = val & 0x80;
+    p.flags.zero = (a & val) == 0;
+    p.flags.overflow = val & 0x40;
 }
 
-uint8_t CPU::OP_CMP(uint8_t cmpval)
+void CPU::OP_CMP(uint8_t cmpval)
 {
     uint8_t res = cmpval - val;
 
-    update_flag(FLG_ZRO, res == 0);
-    update_flag(FLG_NEG, res & 0x80);
-    update_flag(FLG_CRY, res <= cmpval);
+    p.flags.negative = res & 0x80;
+    p.flags.zero = res == 0;
+    p.flags.carry = res <= cmpval;
+}
 
-    return 0;
+void CPU::OP_FLG(uint8_t flgval)
+{
+    p.flags.negative = flgval & 0x80;
+    p.flags.zero = flgval == 0;
 }
 
 bool CPU::WB_BRK()
@@ -1220,8 +1215,8 @@ bool CPU::WB_BRK()
         bus->set(0x0100+s--, pc&0xFF);
         break;
     case 4:
-        bus->set(0x0100+s--, p|FLG_BRK);
-        p |= FLG_INT;
+        bus->set(0x0100+s--, p.get_break_val());
+        p.flags.interrupt = true;
         break;
     case 5:
         pc = bus->get(0xFFFE);
@@ -1241,7 +1236,7 @@ bool CPU::WB_PHP()
     case 1:
         break;
     case 2:
-        bus->set(0x0100+s--, p|FLG_BRK);
+        bus->set(0x0100+s--, p.get_break_val());
     default:
         return true;
     }
@@ -1273,9 +1268,8 @@ bool CPU::WB_PLA()
         break;
     case 3:
         a = bus->get(0x0100+s);
-        p &= ~(FLG_NEG|FLG_ZRO);
-        p |= (a==0) ? FLG_ZRO : 0;
-        p |= (a&0x80) ? FLG_NEG : 0;
+        p.flags.zero = a == 0;
+        p.flags.negative = a & 0x80;
     default:
         return true;
     }
@@ -1291,9 +1285,12 @@ bool CPU::WB_PLP()
     case 2:
         bus->get(0x0100+s++);
         break;
-    case 3:
-        p &= 0x20;
-        p |= bus->get(0x0100+s) & ~FLG_BRK;
+    case 3:{
+        bool preserve_bit = p.flags._unused1;
+        p.value = bus->get(0x0100+s);
+        p.flags.brk = false;
+        p.flags._unused1 = preserve_bit;
+        }
     default:
         return true;
     }
@@ -1354,10 +1351,12 @@ bool CPU::WB_RTI()
     case 2:
         bus->get(0x0100+s++);
         break;
-    case 3:
-        p &= 0x20;
-        p |= bus->get(0x0100+s++) & ~FLG_BRK;
-        break;
+    case 3:{
+        bool preserve_bit = p.flags._unused1;
+        p.value = bus->get(0x0100+s++);
+        p.flags.brk = false;
+        p.flags._unused1 = preserve_bit;
+        }break;
     case 4:
         pc = (pc&0xFF00) | bus->get(0x0100+s++);
         break;
@@ -1390,25 +1389,4 @@ bool CPU::WB_RTS()
         return true;
     }
     return false;
-}
-
-void CPU::OP_FLG(uint8_t flgval)
-{
-    update_flag(FLG_ZRO, flgval == 0);
-    update_flag(FLG_NEG, flgval & 0x80);
-}
-
-void CPU::update_flag(uint8_t flag, bool condition)
-{
-    p = (p & ~flag) | (-static_cast<int>(condition) & flag);
-}
-
-void CPU::set_flag(uint8_t flag)
-{
-    p |= flag;
-}
-
-void CPU::clear_flag(uint8_t flag)
-{
-    p &= ~flag;
 }
