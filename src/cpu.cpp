@@ -12,7 +12,7 @@
 #define FLG_CRY 0b00000001
 
 CPU::CPU() :
-    pc{}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_step{0}, last_p{}
+    pc{}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_step{-1}, last_p{}
 {}
 
 void CPU::load_json(nlohmann::json json)
