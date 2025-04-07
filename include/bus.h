@@ -19,17 +19,24 @@ struct BusOperation
     BusOperationType type;
 };
 
-class RAM;
+class AddressMappedDevice;
 
 class Bus
 {
 private:
-    RAM *ram;
+    struct Mapping
+    {
+        uint16_t start;
+        uint16_t end;
+        AddressMappedDevice *device;
+    };
+
+    std::vector<Mapping> mappings;
     std::vector<BusOperation> operations;
     std::vector<int> conflict_log;
 public:
-    Bus(RAM *ram);
-    int operation_count();
+    Bus();
+    void map_device(uint16_t start, uint16_t end, AddressMappedDevice *device);
     void start_cycle();
     uint8_t get(uint16_t addr);
     void set(uint16_t addr, uint8_t val);

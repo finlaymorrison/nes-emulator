@@ -1,4 +1,4 @@
-#include "ram.h"
+#include "mem.h"
 #include "cpu.h"
 #include "bus.h"
 
@@ -21,13 +21,14 @@ bool perform_tests(const nlohmann::json &tests)
 {
     for (auto &test_case : tests)
     {
-        RAM ram;
+        Mem<1<<16> mem;
         CPU cpu;
 
         cpu.load_json(test_case["initial"]);
-        ram.load_json(test_case["initial"]);
+        mem.load_json(test_case["initial"]);
 
-        Bus bus(&ram);
+        Bus bus;
+        bus.map_device(0x0, 0xFFFF, &mem);
         cpu.attach_bus(&bus);
 
         do
@@ -38,11 +39,11 @@ bool perform_tests(const nlohmann::json &tests)
         while (cpu.mid_instruction());
 
         if (!cpu.verify_state(test_case["final"]) ||
-            !ram.verify_state(test_case["final"]) ||
+            !mem.verify_state(test_case["final"]) ||
             !bus.verify_operations(test_case["cycles"]))
         {
             cpu.analyse_state(test_case["final"]);
-            ram.analyse_state(test_case["final"]);
+            mem.analyse_state(test_case["final"]);
             bus.analyse_operations(test_case["cycles"]);
             return false;
         }

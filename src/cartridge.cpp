@@ -11,7 +11,6 @@ Cartridge::Cartridge(const std::string &rom_path)
     {
         throw std::runtime_error("Failed to open ROM file.");
     }
-
     uint8_t header[16];
     file.read(reinterpret_cast<char*>(header), 16);
     if (file.gcount() != 16
@@ -21,22 +20,22 @@ Cartridge::Cartridge(const std::string &rom_path)
         throw std::runtime_error("Invalid iNES file.");
     }
     
-    uint8_t prg_rom_kb = header[4]*16;
-    uint8_t chr_rom_kb = header[5]*8;
-    std::cout << "Reading NES file - PRG:" << (int)prg_rom_kb
-        << "KB, CHR:" << (int)chr_rom_kb << "KB" << std::endl;
+    int prg_rom_kb = header[4]*16*1024;
+    int chr_rom_kb = header[5]*8*1024;
+    uint8_t mapper = header[7]&0xF0 | (header[6]>>4);
+    std::cout << "Reading NES file [MAP:" << (int)mapper
+        << "] - PRG:" << prg_rom_kb/1024 << "KB, CHR:"
+        << chr_rom_kb/1024 << "KB" << std::endl;
 
-    prg_rom.resize(prg_rom_kb*1024);
-    file.read(reinterpret_cast<char*>(prg_rom.data()), prg_rom_kb*1024);
-    if (file.gcount() != static_cast<std::streamsize>(prg_rom_kb*1024))
-    {
-        throw std::runtime_error("Failed to read PRG ROM data.");
-    }
+    prg_rom.load_binary_region(rom_path, 16, prg_rom_kb);
+    chr_rom.load_binary_region(rom_path, 16 + prg_rom_kb, chr_rom_kb);
+}
 
-    chr_rom.resize(chr_rom_kb*1024);
-    file.read(reinterpret_cast<char*>(chr_rom.data()), chr_rom_kb*1024);
-    if (file.gcount() != static_cast<std::streamsize>(chr_rom_kb*1024))
-    {
-        throw std::runtime_error("Failed to read CHR ROM data.");
-    }
+Cartridge::PRGROM *Cartridge::prg_ref()
+{
+    return &prg_rom;
+}
+Cartridge::CHRROM *Cartridge::chr_ref()
+{
+    return &chr_rom;
 }

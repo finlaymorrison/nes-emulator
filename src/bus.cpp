@@ -1,20 +1,33 @@
 #include "bus.h"
-#include "ram.h"
+#include "addressmappeddevice.h"
 
 #include <string>
 #include <iostream>
 #include <iomanip>
 
-Bus::Bus(RAM *ram) :
-    ram{ram}, operations{}, conflict_log{}
+Bus::Bus() :
+    operations{}, conflict_log{}
 {}
+
+void Bus::map_device(uint16_t start, uint16_t end, AddressMappedDevice *device)
+{
+    mappings.emplace_back(Mapping{start, end, device});
+}
 
 uint8_t Bus::get(uint16_t addr)
 {
     conflict_log.back()++;
-    uint8_t val = ram->get(addr);
-    operations.emplace_back(BusOperation{addr, val, BusOperationType::READ});
-    return val;
+
+    for (const auto &m : mappings)
+    {
+        if (addr >= m.start && addr <= m.end)
+        {
+            uint8_t val = m.device->get(addr - m.start);
+            operations.emplace_back(BusOperation{addr, val, BusOperationType::READ});
+            return val;
+        }
+    }
+    throw std::runtime_error("No device mapped at address " + std::to_string(addr));
 }
 
 void Bus::start_cycle()
@@ -25,13 +38,17 @@ void Bus::start_cycle()
 void Bus::set(uint16_t addr, uint8_t val)
 {
     conflict_log.back()++;
-    ram->set(addr, val);
-    operations.emplace_back(BusOperation{addr, val, BusOperationType::WRITE});
-}
 
-int Bus::operation_count()
-{
-    return operations.size();
+    for (const auto &m : mappings)
+    {
+        if (addr >= m.start && addr <= m.end)
+        {
+            m.device->set(addr - m.start, val);
+            operations.emplace_back(BusOperation{addr, val, BusOperationType::WRITE});
+            return;
+        }
+    }
+    throw std::runtime_error("No device mapped at address " + std::to_string(addr));
 }
 
 bool Bus::verify_operations(nlohmann::json json)
@@ -87,7 +104,7 @@ void Bus::analyse_operations(nlohmann::json json)
         }
         else
         {
-            std::cerr << "Expected: [EMPTY] ";
+            std::cerr << "Expected: [EMPTY] "  << std::endl;
         }
         
         std::cerr << "Observed: " << "[" << ((operations[i].type == BusOperationType::READ) ? "read" : "write")
