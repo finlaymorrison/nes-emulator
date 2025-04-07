@@ -4,7 +4,8 @@
 #include <fstream>
 #include <iostream>
 
-Cartridge::Cartridge(const std::string &rom_path)
+Cartridge::Cartridge(const std::string &rom_path) :
+    vram{}
 {
     std::ifstream file(rom_path, std::ios::binary);
     if (!file.is_open())
@@ -38,4 +39,8 @@ Cartridge::PRGROM *Cartridge::prg_ref()
 Cartridge::CHRROM *Cartridge::chr_ref()
 {
     return &chr_rom;
+}
+Cartridge::VRAM *Cartridge::vram_ref()
+{
+    return &vram;
 }
