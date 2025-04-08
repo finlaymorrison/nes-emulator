@@ -5,7 +5,7 @@
 #include <iomanip>
 
 CPU::CPU() :
-    pc{}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_step{-1}, last_p{}
+    pc{0xFFFC}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_step{-1}, last_p{}
 {}
 
 void CPU::load_json(nlohmann::json json)

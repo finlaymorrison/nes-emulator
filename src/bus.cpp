@@ -119,3 +119,16 @@ void Bus::analyse_operations(nlohmann::json json)
         }
     }
 }
+
+bool Bus::conflict_check()
+{
+    for (int accesses : conflict_log)
+    {
+        if (accesses != 1)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}

@@ -1,5 +1,8 @@
 #include "nes.h"
 
+#include <chrono>
+#include <thread>
+
 NES::NES(const std::string &rom_path) :
     cpu_bus(), ppu_bus(),
     cpu(), cpu_mem(),
@@ -22,5 +25,32 @@ NES::NES(const std::string &rom_path) :
 
 void NES::run()
 {
+    using namespace std::chrono;
 
+    constexpr int target_round_period = 601;
+
+    int waits = 0;
+    for (int i = 0; i < 1000; ++i)
+    {
+        auto round_start_time = high_resolution_clock::now();
+
+        cpu_bus.start_cycle();
+        cpu.clock_cycle();
+
+        ppu_bus.start_cycle();
+        ppu.clock_cycle();
+        ppu_bus.start_cycle();
+        ppu.clock_cycle();
+        ppu_bus.start_cycle();
+        ppu.clock_cycle();
+
+        auto round_finish_time = high_resolution_clock::now();
+        int round_period = duration_cast<nanoseconds>(
+            round_finish_time - round_start_time
+        ).count();
+        if (target_round_period - round_period)
+        {
+            std::this_thread::sleep_for(nanoseconds(target_round_period - round_period));
+        }
+    }
 }

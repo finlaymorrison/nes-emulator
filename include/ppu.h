@@ -16,4 +16,5 @@ public:
     Registers *reg_ref();
 
     void attach_bus(Bus *new_bus);
+    void clock_cycle();
 };

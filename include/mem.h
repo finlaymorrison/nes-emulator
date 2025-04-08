@@ -12,7 +12,7 @@
 
 #include <cstdint>
 
-template<int SIZE>
+template<unsigned int SIZE>
 class Mem: public AddressMappedDevice
 {
 public:
@@ -61,12 +61,12 @@ public:
 
     uint8_t get(uint16_t addr)
     {
-        return memory[addr];
+        return memory[addr % SIZE];
     }
 
     void set(uint16_t addr, uint8_t val)
     {
-        memory[addr] = val;
+        memory[addr % SIZE] = val;
     }
 
     void load_binary_region(const std::string &filepath, std::streamoff offset, std::size_t length)

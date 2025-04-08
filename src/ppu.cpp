@@ -14,3 +14,8 @@ void PPU::attach_bus(Bus *new_bus)
 {
     bus = new_bus;
 }
+
+void PPU::clock_cycle()
+{
+
+}

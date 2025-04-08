@@ -42,4 +42,5 @@ public:
     void set(uint16_t addr, uint8_t val);
     bool verify_operations(nlohmann::json json);
     void analyse_operations(nlohmann::json json);
+    bool conflict_check();
 };

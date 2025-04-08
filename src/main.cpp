@@ -19,5 +19,6 @@ int main(int argc, char** argv)
     {
         const std::string rom_path = "roms/Donkey Kong (USA) (Rev 1) (e-Reader Edition).nes";
         NES nes(rom_path);
+        nes.run();
     }
 }
