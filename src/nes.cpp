@@ -1,9 +1,11 @@
 #include "nes.h"
+#include "window.h"
 
 #include <chrono>
 #include <thread>
 
-NES::NES(const std::string &rom_path) :
+NES::NES(Window *window, const std::string &rom_path) :
+    window(window),
     cpu_bus(), ppu_bus(),
     cpu(), cpu_mem(),
     ppu(), palette_mem(),
@@ -29,20 +31,22 @@ void NES::run()
 
     constexpr int target_round_period = 601;
 
-    int waits = 0;
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 1e7; ++i)
     {
         auto round_start_time = high_resolution_clock::now();
 
         cpu_bus.start_cycle();
         cpu.clock_cycle();
 
-        ppu_bus.start_cycle();
-        ppu.clock_cycle();
-        ppu_bus.start_cycle();
-        ppu.clock_cycle();
-        ppu_bus.start_cycle();
-        ppu.clock_cycle();
+        for (int j = 0; j < 3; ++j)
+        {
+            ppu_bus.start_cycle();
+            ppu.clock_cycle();
+            if (ppu.frame_complete() && j == 0 && i%30000 == 0)
+            {
+                window->draw(ppu.get_display());
+            }
+        }
 
         auto round_finish_time = high_resolution_clock::now();
         int round_period = duration_cast<nanoseconds>(
@@ -50,7 +54,7 @@ void NES::run()
         ).count();
         if (target_round_period - round_period)
         {
-            std::this_thread::sleep_for(nanoseconds(target_round_period - round_period));
+            //std::this_thread::sleep_for(nanoseconds(target_round_period - round_period));
         }
     }
 }

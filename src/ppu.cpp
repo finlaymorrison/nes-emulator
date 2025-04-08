@@ -2,7 +2,7 @@
 #include "bus.h"
 
 PPU::PPU() :
-    registers{}
+    registers{}, display{}, bus{nullptr}
 {}
 
 PPU::Registers *PPU::reg_ref()
@@ -18,4 +18,14 @@ void PPU::attach_bus(Bus *new_bus)
 void PPU::clock_cycle()
 {
 
+}
+
+PPU::Display PPU::get_display()
+{
+    return display;
+}
+
+bool PPU::frame_complete()
+{
+    return true;
 }

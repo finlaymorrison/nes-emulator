@@ -1,5 +1,6 @@
 #include "singlesteptests.h"
 #include "nes.h"
+#include "window.h"
 
 #include <string>
 #include <iostream>
@@ -18,7 +19,8 @@ int main(int argc, char** argv)
     else if (std::string(argv[1]) == "rom")
     {
         const std::string rom_path = "roms/Donkey Kong (USA) (Rev 1) (e-Reader Edition).nes";
-        NES nes(rom_path);
+        Window window(1024, 960);
+        NES nes(&window, rom_path);
         nes.run();
     }
 }

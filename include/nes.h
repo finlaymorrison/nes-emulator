@@ -1,3 +1,5 @@
+#pragma once
+
 #include "cartridge.h"
 #include "cpu.h"
 #include "bus.h"
@@ -5,6 +7,9 @@
 #include "ppu.h"
 
 #include <string>
+#include <array>
+
+class Window;
 
 class NES
 {
@@ -21,8 +26,10 @@ private:
 
     PPU ppu;
     PaletteMem palette_mem;
+
+    Window *window;
 public:
-    NES(const std::string &rom_path);
+    NES(Window *window, const std::string &rom_path);
 
     void run();
 };
