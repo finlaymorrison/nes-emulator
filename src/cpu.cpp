@@ -5,8 +5,27 @@
 #include <iomanip>
 
 CPU::CPU() :
-    pc{0xFFFC}, a{}, x{}, y{}, s{}, p{}, bus{nullptr}, ins_step{-1}, last_p{}
+    pc{}, a{}, x{}, y{}, s{}, p{},
+    bus{nullptr}, ins_step{-1}, last_p{},
+    rst(false), irq(false), nmi(false)
 {}
+
+void CPU::trigger_rst()
+{
+    rst = true;
+}
+
+void CPU::trigger_irq()
+{
+    irq = true;
+}
+
+
+void CPU::trigger_nmi()
+{
+    nmi = true;
+}
+
 
 void CPU::load_json(nlohmann::json json)
 {
@@ -95,18 +114,48 @@ void CPU::clock_cycle()
     ++ins_step;
     if (ins_step == 0)
     {
-        opcode = fetch(true);
         last_p = p;
         addr = 0;
         buf = 0;
         val = 0;
         wb_cycle = 0;
+
+        opcode = fetch(true);
+
+        if (rst)
+        {
+            rst=false;
+            s -= 3;
+            opcode = 0x0;
+            p.flags.interrupt = true;
+            interrupt_vec = 0xFFFC;
+            return;
+        }
+        if (nmi)
+        {
+            nmi=false;
+            opcode = 0x0;
+            interrupt_vec = 0xFFFA;
+            return;
+        }
+        if (irq)
+        {
+            irq=false;
+            opcode = 0x0;
+            interrupt_vec = 0xFFFE;
+            return;
+        }
+
+        if (opcode==0x0)
+        {
+            interrupt_vec = 0xFFFE;
+        }
         return;
     }
 
     switch (opcode)
     {
-    case 0x00: // BRK impl
+    case 0x00: // BRK impl (Interrupt)
         if (!ADDR_IMP()) return;
         if (!WB_BRK()) return;
         break;
@@ -1219,10 +1268,10 @@ bool CPU::WB_BRK()
         p.flags.interrupt = true;
         break;
     case 5:
-        pc = bus->get(0xFFFE);
+        pc = bus->get(interrupt_vec);
         break;
     case 6:
-        pc |= bus->get(0xFFFF)<<8;
+        pc |= bus->get(interrupt_vec+1)<<8;
     default:
         return true;
     }

@@ -46,6 +46,17 @@ private:
     Bus *bus;
     int ins_step;
 
+    StatusRegister last_p; // I hate this
+    uint8_t opcode;
+    uint16_t addr; // Effective address
+    uint16_t buf; // Buffer value
+    uint8_t val; // Address value
+    uint16_t interrupt_vec; // Interupt vector
+    int wb_cycle;
+
+    bool rst;
+    bool irq;
+    bool nmi;
     
 public:
     CPU();
@@ -55,14 +66,11 @@ public:
     void clock_cycle();
     void attach_bus(Bus *new_bus);
     bool mid_instruction();
-private:
-    StatusRegister last_p; // I hate this
-    uint8_t opcode;
-    uint16_t addr; // Effective address
-    uint16_t buf; // Buffer value
-    uint8_t val; // Address value
-    int wb_cycle;
 
+    void trigger_rst();
+    void trigger_irq();
+    void trigger_nmi();
+private:
     uint8_t fetch(bool inc);
 
     bool ADDR_IMP(); // Implied

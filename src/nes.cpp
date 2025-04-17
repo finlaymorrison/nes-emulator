@@ -27,14 +27,11 @@ NES::NES(Window *window, const std::string &rom_path) :
 
 void NES::run()
 {
-    using namespace std::chrono;
-
     constexpr int target_round_period = 601;
 
+    cpu.trigger_rst();
     for (int i = 0; i < 1e7; ++i)
     {
-        auto round_start_time = high_resolution_clock::now();
-
         cpu_bus.start_cycle();
         cpu.clock_cycle();
 
@@ -46,15 +43,6 @@ void NES::run()
             {
                 window->draw(ppu.get_display());
             }
-        }
-
-        auto round_finish_time = high_resolution_clock::now();
-        int round_period = duration_cast<nanoseconds>(
-            round_finish_time - round_start_time
-        ).count();
-        if (target_round_period - round_period)
-        {
-            //std::this_thread::sleep_for(nanoseconds(target_round_period - round_period));
         }
     }
 }
